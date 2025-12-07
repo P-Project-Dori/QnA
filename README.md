@@ -1,5 +1,5 @@
 🐧 DORI — Multilingual Autonomous Tour Guide Robot
-DORI Graduation Project (2024–2025)
+DORI Graduation Project
 
 
 다국어 관광 안내 로봇 — 스팟 설명 + RAG 기반 Q&A + 포토스팟 + 웨이크워드
