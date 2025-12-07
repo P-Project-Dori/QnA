@@ -1,10 +1,10 @@
-🐧 DORI — Multilingual Autonomous Tour Guide Robot
-DORI Graduation Project (2024–2025)
+**🐧 DORI — Multilingual Autonomous Tour Guide Robot
+**DORI Graduation Project (2024–2025)
 
 다국어 관광 안내 로봇 — 스팟 설명 + RAG 기반 Q&A + 포토스팟 + 웨이크워드
 
-📌 프로젝트 개요
-
+**📌 프로젝트 개요
+**
 DORI는 경복궁을 따라 이동하며 관광객에게 다국어 설명을 제공하고,
 사용자의 질문을 RAG 기반 LLM으로 정확하게 답변해주는
 자율주행 관광 안내 로봇입니다.
@@ -21,21 +21,12 @@ DORI는 경복궁을 따라 이동하며 관광객에게 다국어 설명을 제
 
 까지의 완전 동작 데모를 구현하는 것입니다.
 
-🧱 프로젝트 전체 구조
-dori-project/
-├─ app/
-│  ├─ (모든 Python 모듈: STT/TTS/RAG/LLM/Orchestrator)
-├─ db/
-│  ├─ schema.sql / sample_data.sql
-├─ credentials/
-│  └─ gcp-service-account.json
-├─ Dockerfile
-├─ docker-compose.yml
-├─ requirements.txt
-└─ README.md
+**🧱 프로젝트 전체 구조**
+<img width="426" height="268" alt="image" src="https://github.com/user-attachments/assets/4b34908c-66f7-4c30-8a2c-ff295509caa1" />
 
-🔧 기술 스택
-분야	사용 기술
+
+**🔧 기술 스택
+**분야	사용 기술
 언어	Python 3.11
 STT/TTS	Google Cloud Speech-to-Text / Text-to-Speech
 DB	PostgreSQL + psycopg2
@@ -43,8 +34,8 @@ RAG	FAISS + e5-small-v2 + gte-small 임베딩
 LLM	로컬(ollama / llama.cpp 등)
 배포	Docker / docker-compose
 하드웨어	Unitree Go2 + NVIDIA Orin
-🎯 핵심 기능
-✔ 스팟별 안내 멘트 (다국어 TTS)
+**🎯 핵심 기능
+**✔ 스팟별 안내 멘트 (다국어 TTS)
 
 영어 원본 스크립트 → 번역 → TTS 재생
 
@@ -74,8 +65,8 @@ Google STT로 사용자 음성 인식
 
 아래 템플릿은 팀원들이 바로 이해하기 좋도록 주석 스타일 설명으로 정리했어.
 
-📁 app/
-dori_main.py
+**📁 app/
+**dori_main.py
 
 전체 엔트리 포인트. 웨이크워드 감지 → 인사 → 전체 투어 루프 실행.
 
@@ -147,8 +138,8 @@ RAG용 knowledge_docs 삽입.
 
 knowledge_docs 임베딩 계산 후 FAISS 인덱스 생성.
 
-📁 db/
-schema.sql
+**📁 db/
+**schema.sql
 
 PostgreSQL 테이블 구조 정의.
 
@@ -156,13 +147,13 @@ sample_data.sql
 
 기본 languages / place 데이터 삽입.
 
-📁 credentials/
-(Google Service Account JSON)
+**📁 credentials/
+**(Google Service Account JSON)
 
 STT/TTS API를 위한 GCP 서비스 계정 키. (절대 깃허브 공개 저장소에 올리면 안 됨)
 
-기타
-Dockerfile
+**기타
+**Dockerfile
 
 dori-app 컨테이너 빌드 스크립트.
 
@@ -174,8 +165,8 @@ requirements.txt
 
 Python 의존성 목록.
 
-🚀 실행 방법 (개발)
-1. 가상환경 생성
+**🚀 실행 방법 (개발)
+**1. 가상환경 생성
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -216,8 +207,8 @@ docker logs -f dori-app
         ↓
 투어 종료 멘트
 
-🙌 팀원들이 알아야 할 핵심 요약
-
+**🙌 팀원들이 알아야 할 핵심 요약
+**
 영어가 base 데이터이고, 필요한 언어는 모두 “번역 서비스”로 처리.
 
 STT/TTS는 Google Cloud, Q&A는 로컬 LLM + RAG + 번역.
