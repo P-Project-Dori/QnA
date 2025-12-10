@@ -4,7 +4,7 @@ from typing import Callable
 import threading
 import time
 
-from stt_service import listen_for_seconds
+from stt_service import listen_for_seconds, listen_for_seconds_with_lang
 
 WakeWordCallback = Callable[[], None]
 
@@ -58,25 +58,26 @@ def wakeword_label(lang: str) -> str:
     return "도리야" if lang.lower().startswith("ko") else "hey dori"
 
 
-def _voice_listener_loop(on_detect: WakeWordCallback, lang: str):
+def _voice_listener_loop(on_detect: WakeWordCallback, default_lang: str = "en"):
     """
     마이크로 'hey dori'를 듣고 감지하면 콜백 실행.
     Google STT를 사용하므로 GCP 자격증명이 필요합니다.
     """
-    print(f"[WakeWord] 음성 모드 시작: '{wakeword_label(lang)}'를 말하면 도리가 깨어납니다. (q를 입력하면 종료)")
+    print(f"[WakeWord] Voice mode on. Please call Dori in any language! (e.g., 'hey dori', 'dori', '도리야').")
     last_trigger = 0.0
     while True:
-        text = listen_for_seconds(lang="en", seconds=3)
+        text, detected_lang = listen_for_seconds_with_lang(seconds=3)
         if text:
             normalized = text.lower().strip()
-            print(f"[WakeWord] STT captured: {normalized}")
+            lang_to_use = detected_lang or default_lang
+            print(f"[WakeWord] STT captured: {normalized} (detected={detected_lang})")
             now = time.time()
             if now - last_trigger < WAKEWORD_COOLDOWN:
                 time.sleep(0.2)
                 continue
-            if is_wakeword(normalized, lang):
+            if is_wakeword(normalized, lang_to_use):
                 print("[WakeWord] 'Hey, Dori' 감지됨 → 콜백 호출")
-                on_detect()
+                on_detect(lang_to_use)
                 last_trigger = now
                 continue
         else:

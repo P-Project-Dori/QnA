@@ -13,11 +13,18 @@ LanguageCode = Literal["en", "ko"]
 PLACE_ID = "gyeongbokgung"
 
 
-def on_wakeword_detected():
+def on_wakeword_detected(detected_lang: str = "en"):
     """
     웨이크워드("Hey, Dori")가 감지되었을 때 호출되는 콜백.
     여기서 간단한 인사 멘트를 하고, 투어를 시작한다.
     """
+    global USER_LANG
+    # Whisper 감지 언어 기준으로 ko/en 설정 (기타는 en 기본)
+    if detected_lang and detected_lang.startswith("ko"):
+        USER_LANG = "ko"
+    else:
+        USER_LANG = "en"
+
     print("[ENTRY] Wakeword detected! Starting tour...")
 
     # 1) 인사 멘트
@@ -54,22 +61,14 @@ def main():
     global USER_LANG
 
     while True:
-        # 언어 선택 (en/ko)
-        while True:
-            choice = input("Select language (ko/en): ").strip().lower()
-            if choice in ("ko", "en"):
-                USER_LANG = choice  # type: ignore
-                break
-            print("Please enter 'ko' or 'en'.")
-
-        print(f"[ENTRY] Selected language = {USER_LANG}, place_id = {PLACE_ID}")
-        print("[ENTRY] Waiting for wakeword... (voice)")
+        USER_LANG = "en"  # default before detection
+        print(f"[ENTRY] Waiting for wakeword... (voice, auto language detection)")
         print()
 
-        # 웨이크워드 리스너 시작 (언어별 키워드)
+        # 웨이크워드 리스너 시작 (언어 자동 감지)
         start_wakeword_listener(on_wakeword_detected, use_voice=True, lang=USER_LANG)
 
-        # 메인 스레드는 투어 종료까지 유지, 종료 후 다시 언어 선택으로
+        # 메인 스레드는 투어 종료까지 유지, 종료 후 다시 대기
         try:
             while True:
                 time.sleep(1.0)
