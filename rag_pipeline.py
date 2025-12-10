@@ -1,80 +1,30 @@
 # rag_pipeline.py
 
 from faiss_retriever import FaissRetriever
-from db_utils import get_scripts_for_spot_code
-
 
 retriever = FaissRetriever(
-    model_name="intfloat/e5-small-v2, thenlper/gte-small",
+    index_path="faiss_index_en.bin",
+    ids_path="faiss_ids_en.npy",
     top_k=5,
 )
 
-
-def build_spot_intro_text(spot_code: str, language: str = "en") -> str:
+def build_rag_context(question: str, spot_code=None):
     """
-    스팟 도착 시 TTS로 읽어줄 소개 멘트 (scripts 기반)
-    현재는 scripts.text_en을 사용하고, language 파라미터는 향후 번역 레이어에서 사용 예정.
+    RAG용 컨텍스트 생성
+    1) FAISS로 문서 검색
+    2) spot_code 필터링 (있을 경우)
     """
-    scripts = get_scripts_for_spot_code(spot_code)
-    paragraphs = [s["text_en"] for s in scripts]
-    return "\n\n".join(paragraphs)
+    docs = retriever.search(question)
 
+    if spot_code:
+        # 안전하게 dict 형태만 필터링
+        docs = [d for d in docs if isinstance(d, dict) and d.get("spot_code") == spot_code]
 
-def build_rag_context_for_question(
-    question: str,
-    place_id: str = "gyeongbokgung",
-    language: str = "en",
-) -> str:
-    """
-    사용자의 질문과 place_id를 기반으로,
-    FAISS에서 관련 knowledge_docs를 찾고 context 텍스트를 구성.
-    """
-    docs = retriever.retrieve(
-        question=question,
-        place_id=place_id,
-        language=language,
-    )
-
-    if not docs:
-        return ""
-
-    parts = []
+    # text_en 추출도 dict만 대상으로 안전하게 처리
+    texts = []
     for d in docs:
-        prefix = ""
-        if d.get("source_type"):
-            prefix += f"[source: {d['source_type']}] "
-        if d.get("source_ref"):
-            prefix += f"[ref: {d['source_ref']}] "
-        parts.append(prefix + d["text"])
+        if isinstance(d, dict) and "text_en" in d:
+            texts.append(d["text_en"])
+    context_blob = "\n\n".join(texts)
 
-    return "\n\n".join(parts)
-
-
-def build_llm_prompt_for_qa(
-    spot_code: str,
-    user_question: str,
-    place_id: str = "gyeongbokgung",
-    language: str = "en",
-) -> str:
-    """
-    LLM에게 넘길 전체 프롬프트를 생성.
-    """
-    context = build_rag_context_for_question(
-        question=user_question,
-        place_id=place_id,
-        language=language,
-    )
-
-    system_part = (
-        "You are a tour guide robot for Gyeongbokgung Palace. "
-        "Answer the visitor's question based ONLY on the given context. "
-        "If the information is not in the context, honestly say that you do not know.\n"
-    )
-
-    prompt = (
-        f"{system_part}\n"
-        f"[Context Start]\n{context}\n[Context End]\n\n"
-        f"[User Question]\n{user_question}\n\n"
-        f"[Answer]\n"
-    )
-    return prompt
+    return context_blob

@@ -1,33 +1,50 @@
 # llm_client.py
 
-import os
-from typing import Optional
+import requests
 
-import ollama  # pip install ollama
-
-
-DEFAULT_MODEL_NAME = os.getenv("DORI_LLM_MODEL", "llama3.1:7b-q4_K_M")
+LLAMA_URL = "http://127.0.0.1:8080/v1/chat/completions"
 
 
-def call_llm(prompt: str, max_tokens: int = 512) -> str:
+def call_llm(prompt: str, temperature=0.7, max_tokens=512) -> str:
     """
-    주어진 prompt에 대해 Llama 3.1 7B Q4_K_M (Ollama) 응답 텍스트를 반환.
-
-    - 모델 이름은 환경변수 DORI_LLM_MODEL 로 변경 가능.
-    - 번역, RAG QA 등 모든 텍스트 생성에 공통으로 사용됨.
+    Simple helper that wraps ask_local_llm-style payload but accepts a single prompt string.
+    Used by translation_service and other modules expecting an OpenAI-compatible chat reply.
     """
-    # Ollama chat API를 사용한 간단한 구현
-    resp = ollama.chat(
-        model=DEFAULT_MODEL_NAME,
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
-        options={
-            "num_predict": max_tokens,
-            # 필요하면 temperature, top_p 등 옵션 추가 가능
+    messages = [{"role": "user", "content": prompt}]
+    return ask_local_llm(messages, temperature=temperature, max_tokens=max_tokens)
+
+
+def ask_local_llm(messages, temperature=0.7, max_tokens=512):
+    payload = {
+        "model": "local",
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    res = requests.post(LLAMA_URL, json=payload, timeout=60)
+    res.raise_for_status()
+    return res.json()["choices"][0]["message"]["content"]
+
+
+def answer_question_with_rag(question: str, context: str, lang="ko"):
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are Dori, a multilingual tour guide robot. "
+                "Use ONLY the given context to answer. "
+                "If the answer is not found in the context, say '저는 그 정보는 가지고 있지 않아요.'"
+            ),
         },
-    )
+        {
+            "role": "user",
+            "content": (
+                f"[Context]\n{context}\n\n"
+                f"[Question]\n{question}\n\n"
+                f"답변은 반드시 {lang} 언어로 제공해줘."
+            ),
+        },
+    ]
 
-    # Ollama의 응답 구조에서 content 부분만 추출
-    content = resp.get("message", {}).get("content", "")
-    return content.strip()
+    return ask_local_llm(messages)

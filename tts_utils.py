@@ -3,7 +3,6 @@
 import time
 from typing import Literal
 
-import pyaudio
 from google.cloud import texttospeech
 
 """

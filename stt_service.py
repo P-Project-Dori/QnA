@@ -1,56 +1,72 @@
 # stt_service.py
-from typing import Literal
-from google.cloud import speech_v1p1beta1 as speech
-import sounddevice as sd
+import io
+import time
+import tempfile
+
 import numpy as np
+import sounddevice as sd
+import whisper
 
-LanguageCode = Literal["en", "ko", "ja", "zh", "fr", "es", "vi", "th"]
-
-LANG_TO_STT_CODE = {
-    "ko": "ko-KR",
-    "en": "en-US",
-    "ja": "ja-JP",
-    "zh": "cmn-Hans-CN",
-    "fr": "fr-FR",
-    "es": "es-ES",
-    "vi": "vi-VN",
-    "th": "th-TH",
+# ===== 언어 코드 매핑 =====
+WHISPER_LANGS = {
+    "ko": "ko",
+    "en": "en",
+    "zh": "zh",
+    "ja": "ja",
+    "fr": "fr",
+    "es": "es",
+    "vi": "vi",
+    "th": "th",
 }
 
+_whisper_model = None
 
-def record_audio(seconds: float = 5.0, sample_rate: int = 16000) -> bytes:
+
+def load_whisper():
+    global _whisper_model
+    if _whisper_model is None:
+        print("🔵 Loading Whisper model: tiny")
+        _whisper_model = whisper.load_model("tiny")
+    return _whisper_model
+
+
+def record_audio(seconds=3.0, sample_rate=16000):
     """
-    마이크로부터 seconds초 동안 녹음해서
-    16kHz, mono, 16bit PCM 바이트로 반환.
+    Record mono audio using sounddevice and return raw int16 bytes.
     """
-    print(f"[STT] Recording {seconds} seconds...")
-    audio = sd.rec(
-        int(seconds * sample_rate),
-        samplerate=sample_rate,
-        channels=1,
-        dtype="int16",
-    )
+    print(f"🎙 Recording {seconds}s ...")
+    data = sd.rec(int(seconds * sample_rate), samplerate=sample_rate, channels=1, dtype="int16")
     sd.wait()
-    audio_bytes = audio.tobytes()
-    return audio_bytes
+    return data.tobytes()
 
 
-def speech_to_text(audio_bytes: bytes, lang: LanguageCode, sample_rate: int = 16000) -> str:
-    client = speech.SpeechClient()
+def speech_to_text(audio_bytes: bytes, lang="en", sample_rate=16000):
+    """
+    Transcribe given audio bytes with Whisper tiny (offline).
+    """
+    if not audio_bytes:
+        return None
 
-    language_code = LANG_TO_STT_CODE.get(lang, "en-US")
+    model = load_whisper()
+    np_audio = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
 
-    audio = speech.RecognitionAudio(content=audio_bytes)
-    config = speech.RecognitionConfig(
-        language_code=language_code,
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=sample_rate,
-        model="default",
-    )
+    language = WHISPER_LANGS.get(lang, "en")
 
-    response = client.recognize(config=config, audio=audio)
+    # Whisper accepts NumPy float32 PCM directly; avoids external ffmpeg dependency
+    result = model.transcribe(np_audio, language=language, fp16=False)
+    text = result.get("text", "").strip()
+    if text:
+        print(f"🎤 User said: {text}")
+    return text if text else None
 
-    if not response.results:
-        return ""
 
-    return response.results[0].alternatives[0].transcript
+def listen_for_seconds(lang="ko", seconds=10):
+    """
+    Offline STT using Whisper tiny.
+    - records for `seconds`, returns transcript or None.
+    """
+    audio = record_audio(seconds=seconds, sample_rate=16000)
+    if not audio:
+        print("⏳ STT timeout (no speech)")
+        return None
+    return speech_to_text(audio_bytes=audio, lang=lang, sample_rate=16000)

@@ -94,16 +94,8 @@ def get_scripts_for_spot_code(spot_code: str):
             cur.execute(sql, (spot_code,))
             rows = cur.fetchall()
 
-    scripts = []
-    for script_id, order_in_spot, text_en in rows:
-        scripts.append(
-            {
-                "id": script_id,
-                "order_in_spot": order_in_spot,
-                "text_en": text_en,
-            }
-        )
-    return scripts
+    # 반환: [(order_in_spot, text_en), ...]
+    return [(order_in_spot, text_en) for _id, order_in_spot, text_en in rows]
 
 
 # ---------------------------------------------------------------------------

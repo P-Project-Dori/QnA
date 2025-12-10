@@ -4,16 +4,12 @@ import time
 from typing import Literal
 
 from wakeword_service import start_wakeword_listener
-from main_tour_loop import run_tour
+from main_tour_loop import run_tour, start_dori_tour
 from tts_service import speak
 
 # translation_service.py와 동일한 언어 코드 타입
-LanguageCode = Literal["en", "ko", "ja", "zh", "fr", "es", "vi", "th"]
+LanguageCode = Literal["en", "ko"]
 
-# TODO:
-#  - 실제로는 웹 예약 정보에서 사용자가 선택한 언어를 가져오면 됨.
-#  - 지금은 데모용으로 한국어로 고정.
-USER_LANG: LanguageCode = "ko"
 PLACE_ID = "gyeongbokgung"
 
 
@@ -33,12 +29,7 @@ def on_wakeword_detected():
     speak(greeting, lang=USER_LANG)
 
     # 2) 메인 투어 실행
-    run_tour(
-        user_lang=USER_LANG,
-        place_id=PLACE_ID,
-        qa_record_seconds=10.0,  # 요구사항: 10초 대기
-        max_qa_turns=3,          # 스팟당 최대 3번까지 Q&A
-    )
+    start_dori_tour(lang=USER_LANG)
 
     # 3) 투어 종료 후 한 마디 더 (원하면)
     if USER_LANG == "ko":
@@ -60,20 +51,31 @@ def main():
     print(" DORI - Multilingual Tour Guide Robot (Demo) ")
     print("==============================================")
     print()
-    print(f"[ENTRY] Selected language = {USER_LANG}, place_id = {PLACE_ID}")
-    print("[ENTRY] Waiting for wakeword... (console에서는 'hey' 입력으로 테스트)")
-    print()
+    global USER_LANG
 
-    # 웨이크워드 리스너 시작
-    # (이 함수는 별도 스레드에서 'hey' 입력을 기다리는 구조라고 가정)
-    start_wakeword_listener(on_wakeword_detected)
-
-    # 메인 스레드는 그냥 살아있기만 하면 됨.
-    try:
+    while True:
+        # 언어 선택 (en/ko)
         while True:
-            time.sleep(1.0)
-    except KeyboardInterrupt:
-        print("\n[ENTRY] KeyboardInterrupt: 프로그램을 종료합니다.")
+            choice = input("Select language (ko/en): ").strip().lower()
+            if choice in ("ko", "en"):
+                USER_LANG = choice  # type: ignore
+                break
+            print("Please enter 'ko' or 'en'.")
+
+        print(f"[ENTRY] Selected language = {USER_LANG}, place_id = {PLACE_ID}")
+        print("[ENTRY] Waiting for wakeword... (voice)")
+        print()
+
+        # 웨이크워드 리스너 시작 (언어별 키워드)
+        start_wakeword_listener(on_wakeword_detected, use_voice=True, lang=USER_LANG)
+
+        # 메인 스레드는 투어 종료까지 유지, 종료 후 다시 언어 선택으로
+        try:
+            while True:
+                time.sleep(1.0)
+        except KeyboardInterrupt:
+            print("\n[ENTRY] KeyboardInterrupt: 프로그램을 종료합니다.")
+            break
 
 
 if __name__ == "__main__":

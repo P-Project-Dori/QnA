@@ -1,158 +1,302 @@
 # main_tour_loop.py
 
-from typing import Literal
-
+import time
 from tour_route import TOUR_ROUTE
-from multilingual_orchestrator import speak_spot_intro, handle_single_qa_turn
+from stt_service import listen_for_seconds
 from tts_service import speak
+from llm_client import call_llm
+from wakeword_service import is_wakeword, wakeword_label
 
-LanguageCode = Literal["en", "ko", "ja", "zh", "fr", "es", "vi", "th"]
-
-
-# 간단한 멘트 사전 (필요하면 나중에 번역 서비스와 연동 가능)
-MESSAGES = {
-    "ask_question": {
-        "ko": "질문이 있으신가요? 10초 동안 질문해 주세요.",
-        "en": "Do you have any questions? Please ask within the next 10 seconds.",
+# ─────────────────────────────────────────────
+#  언어별 고정 멘트 & 스크립트
+# ─────────────────────────────────────────────
+PHRASES = {
+    "arrived": {
+        "ko": "{spot_name}에 도착했습니다.",
+        "en": "We have arrived at {spot_name}.",
     },
-    "no_question": {
-        "ko": "질문이 없으시면, 다음 장소로 이동하겠습니다.",
-        "en": "If you don’t have any questions, I will move to the next spot.",
+    "next_move": {
+        "ko": "다음 장소로 이동합니다.",
+        "en": "Moving to the next spot.",
     },
-    "moving_to_spot": {
-        "ko": "다음 안내 지점으로 이동하겠습니다.",
-        "en": "I will move to the next spot.",
+    "tour_start_welcome": {
+        "ko": "안녕하세요! 도리 투어에 오신 것을 환영합니다.",
+        "en": "Hello! Welcome to the Dori tour.",
+    },
+    "tour_start_move": {
+        "ko": "그럼 이제 첫 번째 장소로 이동하겠습니다.",
+        "en": "Let's move to the first spot.",
+    },
+    "tour_end": {
+        "ko": "모든 투어가 끝났습니다. 함께해주셔서 감사합니다!",
+        "en": "The tour is finished. Thank you for joining!",
+    },
+    "intro_arrival": {
+        "ko": "다음 장소에 도착했습니다.",
+        "en": "We have reached the next spot.",
+    },
+    "qa_intro": {
+        "ko": "설명이 끝났습니다. 질문이 있으신가요? 있으시면 말씀해주세요. 없으시면 ‘패스’라고 말해주셔도 좋아요.",
+        "en": "That concludes the explanation. Do you have any questions? If not, you can say 'pass'.",
+    },
+    "qa_silence": {
+        "ko": "말씀이 없으셔서 다음 장소로 이동하겠습니다.",
+        "en": "No response, so we'll move to the next spot.",
+    },
+    "qa_pass": {
+        "ko": "알겠습니다. 다음 장소로 이동할게요.",
+        "en": "Okay. We will move to the next spot.",
+    },
+    "qa_more": {
+        "ko": "추가로 궁금하신 점 있으신가요?",
+        "en": "Any other questions?",
     },
     "photo_intro": {
-        "ko": "이곳은 사진이 잘 나오는 포토 스팟입니다. 잠시 후 사진을 찍어드릴게요.",
-        "en": "This is a great photo spot. I will take a picture for you soon.",
+        "ko": "이곳은 경회루입니다. 사진이 아주 잘 나오는 장소예요!",
+        "en": "This is Gyeonghoeru. It's a great place for photos!",
     },
-    "photo_done": {
-        "ko": "사진 촬영이 완료되었습니다.",
-        "en": "The photo has been taken.",
+    "photo_prompt": {
+        "ko": "사진을 찍어드릴까요? 준비되시면 ‘찍어줘’라고 말해주세요.",
+        "en": "Shall I take a photo for you? Say 'take a photo' when ready.",
     },
-    "tour_finish": {
-        "ko": "이제 오늘의 투어를 마치겠습니다. 도리와 함께해 주셔서 감사합니다.",
-        "en": "The tour is now finished. Thank you for joining Dori.",
+    "photo_shot": {
+        "ko": "좋아요! 3초 뒤에 찍을게요. 하나, 둘, 셋… 찰칵!",
+        "en": "Great! I'll take it in 3 seconds. One, two, three... click!",
+    },
+    "photo_saved": {
+        "ko": "사진이 저장되었습니다! 나중에 받아가실 수 있어요.",
+        "en": "Photo saved! You can get it later.",
+    },
+    "photo_skip": {
+        "ko": "말씀이 없으셔서 사진 촬영은 생략할게요.",
+        "en": "No response, so I'll skip the photo.",
     },
 }
 
 
-def get_message(key: str, user_lang: LanguageCode) -> str:
+# 간단한 spot 설명 스크립트 (하드코딩, ko/en만)
+SPOT_SCRIPTS = {
+    "ko": {
+        "gwanghwamun": [
+            "광화문은 경복궁의 정문으로, 조선 왕조의 위엄을 상징합니다.",
+            "임진왜란과 한국전쟁을 거치며 여러 차례 훼손과 복원을 반복했습니다.",
+        ],
+        "heungnyemun": [
+            "흥례문은 광화문을 지나 경복궁으로 들어오는 두 번째 문입니다.",
+            "왕실 의식이 진행될 때 신하들이 대기하던 공간과 맞닿아 있습니다.",
+        ],
+        "geunjeongmun": [
+            "근정문은 근정전 앞마당으로 들어가는 문으로, 공식 조회의 입구였습니다.",
+        ],
+        "geunjeongjeon": [
+            "근정전은 국왕이 정사를 보던 정전으로, 경복궁의 중심 건물입니다.",
+            "이곳에서 즉위식과 외국 사신 접견 같은 국가 의례가 열렸습니다.",
+        ],
+        "sujeongjeon": [
+            "수정전은 왕과 신하들이 학문과 정치에 대해 토론하던 장소였습니다.",
+        ],
+        "gyeonghoeru": [
+            "경회루는 연못 위에 세워진 누각으로, 연회와 외국 사신 접대를 위해 사용되었습니다.",
+        ],
+    },
+    "en": {
+        "gwanghwamun": [
+            "Gwanghwamun is the main gate of Gyeongbokgung Palace, symbolizing the authority of the Joseon dynasty.",
+            "It was damaged and restored multiple times through the Imjin War and the Korean War.",
+        ],
+        "heungnyemun": [
+            "Heungnyemun is the second gate after Gwanghwamun when entering Gyeongbokgung.",
+            "It connects to spaces where officials waited during royal ceremonies.",
+        ],
+        "geunjeongmun": [
+            "Geunjeongmun is the gate leading to the main courtyard of Geunjeongjeon, used for official audiences.",
+        ],
+        "geunjeongjeon": [
+            "Geunjeongjeon is the main throne hall where the king handled state affairs.",
+            "Coronations and receptions for foreign envoys took place here.",
+        ],
+        "sujeongjeon": [
+            "Sujeongjeon was a hall where the king and officials discussed studies and politics.",
+        ],
+        "gyeonghoeru": [
+            "Gyeonghoeru is a pavilion built over a pond, used for banquets and receptions of foreign envoys.",
+        ],
+    },
+}
+
+
+# ===========================================================
+# 1) 스팟 스크립트 읽기
+# ===========================================================
+def run_spot_intro(spot_code, lang):
     """
-    언어별 멘트를 가져오는 헬퍼.
-    해당 언어에 정의가 없으면 영어로 fallback.
+    spot_code에 해당하는 설명 스크립트를 DB에서 가져와 TTS로 읽는다.
     """
-    table = MESSAGES.get(key, {})
-    return table.get(user_lang, table.get("en", ""))
+    scripts = SPOT_SCRIPTS.get(lang, {}).get(spot_code) or SPOT_SCRIPTS["en"].get(spot_code, [])
+
+    speak(PHRASES["intro_arrival"][lang], lang)
+    time.sleep(0.3)
+
+    for text in scripts:
+        speak(text, lang)
+        time.sleep(0.3)
+
+        # 간단한 인터럽트: 말 사이에 웨이크워드 감지 시 Q&A 처리 후 이어서 진행
+        if _check_wakeword_inline(lang):
+            _handle_inline_question(spot_code, lang)
+            # 이어서 남은 스크립트 계속
+        time.sleep(0.2)
 
 
-# 실제 로봇 이동/제어 부분은 나중에 Unitree SDK와 연결
-def move_robot_to_spot(spot_code: str):
+# ===========================================================
+# 2) 스팟 Q&A 세션
+# ===========================================================
+def run_qa_session(spot_code, lang):
     """
-    TODO: 여기에 Unitree Go2 자율주행 코드 연동.
-    지금은 데모용으로 콘솔 출력만 한다.
+    질문 → RAG → LLM → TTS
+    - 질문이 없거나 '패스' 계열 → 자동 이동
+    - 질문 있으면 답변하고 "추가 질문 있으신가요?" 반복
     """
-    print(f"[MOVE] 로봇이 스팟 '{spot_code}'로 이동합니다...")
+    speak(PHRASES["qa_intro"][lang], lang)
+
+    while True:
+        print("🎙 STT 대기중... (최대 10초)")
+        user_text = listen_for_seconds(lang=lang, seconds=10)
+
+        # --- 10초 동안 아무 말 없으면 ---
+        if not user_text:
+            speak(PHRASES["qa_silence"][lang], lang)
+            return
+
+        normalized = user_text.lower().strip()
+
+        # --- '패스' 계열 발화 처리 ---
+        PASS_WORDS = ["패스", "없어", "괜찮아", "pass", "no", "없습니다", "아니오"]
+        if any(p in normalized for p in PASS_WORDS):
+            speak(PHRASES["qa_pass"][lang], lang)
+            return
+
+        # --- 질문 있다고 판단되면 RAG + LLM ---
+        print(f"사용자 질문: {normalized}")
+
+        prompt = (
+            "You are Dori, a concise multilingual tour guide robot. "
+            "Answer the user's question directly and briefly in the user's language. "
+            "If unsure, say you do not have that information.\n\n"
+            f"[User question ({lang})]\n{normalized}\n\n"
+            f"[Answer in {lang}]:"
+        )
+        answer = call_llm(prompt).strip()
+
+        speak(answer, lang)
+        time.sleep(0.3)
+
+        # --- 추가 질문 유도 ---
+        speak(PHRASES["qa_more"][lang], lang)
 
 
-# 실제 카메라 촬영/저장은 나중에 구현
-def take_photo_for_user(spot_code: str):
+# ===========================================================
+# 3) 마지막 스팟 — 사진 촬영 모드
+# ===========================================================
+def run_photo_mode(lang):
+    speak(PHRASES["photo_intro"][lang], lang)
+    speak(PHRASES["photo_prompt"][lang], lang)
+
+    user_text = listen_for_seconds(lang=lang, seconds=10)
+
+    if user_text and ("찍어" in user_text or "photo" in user_text.lower()):
+        speak(PHRASES["photo_shot"][lang], lang)
+
+        # TODO: 실제 카메라 촬영 코드 연결
+        # capture_photo()
+
+        speak(PHRASES["photo_saved"][lang], lang)
+    else:
+        speak(PHRASES["photo_skip"][lang], lang)
+
+
+# ===========================================================
+# 4) 전체 투어 루프
+# ===========================================================
+def start_dori_tour(lang="ko"):
     """
-    TODO: 여기서 카메라로 사진 촬영하고 파일 저장/공유 로직 구현.
-    지금은 데모용으로 콘솔 출력만 한다.
+    도리의 전체 투어 엔진
     """
-    print(f"[PHOTO] 스팟 '{spot_code}'에서 사진을 촬영합니다...")
+    speak(PHRASES["tour_start_welcome"][lang], lang)
+    time.sleep(0.3)
+    speak(PHRASES["tour_start_move"][lang], lang)
+    time.sleep(0.5)
 
-
-def run_tour(
-    user_lang: LanguageCode = "ko",
-    place_id: str = "gyeongbokgung",
-    qa_record_seconds: float = 10.0,
-    max_qa_turns: int = 3,
-):
-    """
-    도리 투어 메인 루프.
-
-    - TOUR_ROUTE에 정의된 순서대로 스팟을 순회
-    - 각 스팟에서:
-        1) (옵션) 이동 안내 멘트
-        2) 스팟 소개 멘트 (다국어 TTS)
-        3) 10초 대기 Q&A 루프
-        4) 포토 스팟이면 사진 촬영 로직
-
-    매개변수:
-      - user_lang: 사용자가 선택한 언어 코드
-      - place_id: DB 상 place_id (기본값 'gyeongbokgung')
-      - qa_record_seconds: 각 질문 대기 시간(초) → 요구사항대로 10초
-      - max_qa_turns: 스팟당 최대 Q&A 반복 횟수
-    """
-    print(f"[TOUR] 투어 시작 (lang={user_lang}, place_id={place_id})")
-
-    for idx, spot in enumerate(TOUR_ROUTE, start=1):
+    for spot in TOUR_ROUTE:
         spot_code = spot["spot_code"]
-        spot_name_en = spot["name_en"]
-        is_photo_spot = spot["is_photo_spot"]
+        spot_name = spot.get(f"name_{lang}", spot["name_en"])
+        is_photo_spot = spot.get("is_photo_spot", False)
 
-        print(f"\n[TOUR] ==== 스팟 {idx}: {spot_code} ({spot_name_en}) ====")
+        # 스팟 이름 멘트
+        speak(PHRASES["arrived"][lang].format(spot_name=spot_name), lang)
 
-        # 1) 로봇 이동 (실제 구현은 move_robot_to_spot 안에)
-        move_robot_to_spot(spot_code)
+        # 스팟 설명 읽기
+        run_spot_intro(spot_code, lang)
 
-        # 이동 안내 TTS (원하면 주석 해제해서 사용)
-        move_msg = get_message("moving_to_spot", user_lang)
-        if move_msg:
-            speak(move_msg, lang=user_lang)
+        # Q&A
+        run_qa_session(spot_code, lang)
 
-        # 2) 스팟 소개 멘트 (DB 기반 scripts → 번역 → TTS)
-        speak_spot_intro(spot_code, user_lang)
-
-        # 3) Q&A 루프
-        qa_count = 0
-        while qa_count < max_qa_turns:
-            ask_msg = get_message("ask_question", user_lang)
-            if ask_msg:
-                speak(ask_msg, lang=user_lang)
-
-            # 여기서 10초 동안 사용자 음성을 듣고,
-            # 질문이 없으면 handle_single_qa_turn은 ""(빈 문자열)을 반환하도록 구현돼 있다고 가정.
-            answer_user = handle_single_qa_turn(
-                user_lang=user_lang,
-                spot_code=spot_code,
-                place_id=place_id,
-                record_seconds=qa_record_seconds,
-            )
-
-            if not answer_user:
-                # 질문이 없거나 STT로 인식된 내용이 없는 경우 → Q&A 종료
-                break
-
-            qa_count += 1
-            # 질문이 있었고 답변도 완료된 상태 → 반복 여부는 max_qa_turns로 제한
-
-        if qa_count == 0:
-            # 한 번도 질문이 없었을 때만 "질문이 없으시면..." 멘트
-            no_q_msg = get_message("no_question", user_lang)
-            if no_q_msg:
-                speak(no_q_msg, lang=user_lang)
-
-        # 4) 포토 스팟이면 사진 로직
+        # 사진 스팟이면 사진 모드 실행
         if is_photo_spot:
-            photo_intro = get_message("photo_intro", user_lang)
-            if photo_intro:
-                speak(photo_intro, lang=user_lang)
+            run_photo_mode(lang)
 
-            # TODO: 여기서 "사진 찍어드릴까요?" → STT로 yes/no 받는 로직을 추가할 수도 있음.
-            # 일단은 무조건 사진 한 번 찍어주는 것으로 처리.
-            take_photo_for_user(spot_code)
+        speak(PHRASES["next_move"][lang], lang)
+        time.sleep(1)
 
-            photo_done = get_message("photo_done", user_lang)
-            if photo_done:
-                speak(photo_done, lang=user_lang)
+    speak(PHRASES["tour_end"][lang], lang)
 
-    # 전체 루트 종료 후 마무리 멘트
-    finish_msg = get_message("tour_finish", user_lang)
-    if finish_msg:
-        speak(finish_msg, lang=user_lang)
 
-    print("[TOUR] 투어 종료")
+# ===========================================================
+# 5) 인라인 웨이크워드 인터럽트 핸들러
+# ===========================================================
+def _check_wakeword_inline(lang: str) -> bool:
+    """
+    짧게 STT를 돌려 웨이크워드가 들렸는지 확인.
+    - 2초 청취, 선택된 언어 코드 사용
+    """
+    text = listen_for_seconds(lang=lang, seconds=2)
+    if not text:
+        return False
+    print(f"[WakeWord-inline] captured: {text}")
+    return is_wakeword(text, lang)
+
+
+def _handle_inline_question(spot_code: str, lang: str):
+    """
+    웨이크워드로 인터럽트된 경우 한 번의 질문에 답하고 스크립트를 이어감.
+    """
+    speak(PHRASES["qa_intro"][lang], lang)
+
+    user_text = listen_for_seconds(lang=lang, seconds=6)
+    if not user_text:
+        speak(PHRASES["qa_silence"][lang], lang)
+        return
+
+    normalized = user_text.strip()
+    print(f"[Q&A-inline] question: {normalized}")
+
+    prompt = (
+        "You are Dori, a concise multilingual tour guide robot. "
+        "Answer the user's question directly and briefly in the user's language. "
+        "If unsure, say you do not have that information.\n\n"
+        f"[User question ({lang})]\n{normalized}\n\n"
+        f"[Answer in {lang}]:"
+    )
+    answer = call_llm(prompt).strip()
+    speak(answer, lang)
+
+    # 안내 멘트 후 스크립트로 복귀
+    speak(PHRASES["qa_more"][lang], lang)
+
+
+# 별칭: 기존 코드 호환
+def run_tour(user_lang="ko", place_id="gyeongbokgung", qa_record_seconds=10.0, max_qa_turns=3):
+    """
+    Wrapper for legacy import compatibility.
+    """
+    return start_dori_tour(lang=user_lang)
