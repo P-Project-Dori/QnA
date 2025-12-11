@@ -50,11 +50,3 @@ rag_pipeline.py : RAG pipeline orchestrator. Combines FAISS retrieval with spot 
 * 𝐔𝐭𝐢𝐥𝐢𝐭𝐲 & 𝐓𝐞𝐬𝐭 𝐅𝐢𝐥𝐞𝐬
 
 multilingual_orchestrator.py : Multilingual Q&A orchestrator. Handles single Q&A turns: records audio, transcribes, translates question to English, performs RAG+LLM, translates answer back, and plays TTS.
-
-build_faiss_index.py : Alternative FAISS index builder (legacy/backup version). Similar to 04_build_faiss_index.py but uses different function names.
-
-demo_read_spot_intro.py : Demo script for testing spot introductions. Reads scripts from database and plays them via TTS for testing purposes.
-
-test_tts.py : Simple TTS testing script. Tests ElevenLabs TTS functionality with different languages.
-
-tts_utils.py : Legacy TTS utilities (Google Cloud TTS). Old implementation using Google Cloud TTS with PyAudio - kept for reference but not actively used.
