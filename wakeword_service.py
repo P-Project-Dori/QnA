@@ -3,6 +3,7 @@
 from typing import Callable
 import threading
 import time
+import re
 
 from stt_service import listen_for_seconds, listen_for_seconds_with_lang
 
@@ -10,6 +11,54 @@ WakeWordCallback = Callable[[], None]
 
 # 허용 표현 (소문자 비교). 약간의 철자/발음 흔들림을 허용하기 위해 부분 매칭 사용.
 WAKEWORD_COOLDOWN = 2.0  # 중복 인식 방지 간격(초)
+
+
+def _levenshtein_distance(s1: str, s2: str) -> int:
+    """Calculate Levenshtein distance between two strings for fuzzy matching."""
+    if len(s1) < len(s2):
+        return _levenshtein_distance(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+    
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    
+    return previous_row[-1]
+
+
+def _fuzzy_match(text: str, pattern: str, max_distance: int = 2) -> bool:
+    """
+    Check if text matches pattern with fuzzy matching.
+    Returns True if:
+    - Exact substring match, OR
+    - Edit distance is within max_distance for similar pronunciations
+    """
+    text_lower = text.lower()
+    pattern_lower = pattern.lower()
+    
+    # Exact substring match
+    if pattern_lower in text_lower:
+        return True
+    
+    # Extract words from text
+    words = re.findall(r'\b\w+\b', text_lower)
+    
+    # Check each word for fuzzy match
+    for word in words:
+        # Only check words of similar length (more efficient)
+        if abs(len(word) - len(pattern_lower)) <= max_distance and len(word) >= 3:
+            distance = _levenshtein_distance(word, pattern_lower)
+            if distance <= max_distance:
+                return True
+    
+    return False
 
 
 def _wakewords_for_lang(lang: str):
@@ -22,35 +71,56 @@ def _wakewords_for_lang(lang: str):
             "doriya",
             "dori ya",
             "dori-ya",
+            "도리아",  # 추가 변형
         ]
-    # 기본: 영어/기타
+    # 기본: 영어/기타 - 더 많은 변형 추가
     return [
         "hey dori",
         "hey, dori",
         "hey dory",
         "hey, dory",
         "hey tori",
+        "hey, tori",
         "dori",
         "dory",
         "tori",
+        "doria",  # 추가: Doria
+        "doary",  # 추가: Doary
+        "doree",  # 추가: Doree
+        "dorey",  # 추가: Dorey
+        "dorry",  # 추가: Dorry
     ]
 
 
 def is_wakeword(text: str, lang: str) -> bool:
     """
-    단순 민감도 향상 로직:
+    향상된 민감도 로직:
     - 소문자/공백/구두점 제거 후 부분 문자열 검사
-    - 언어별 wakeword 리스트에 있는 키워드가 포함되어 있으면 true
+    - Fuzzy matching으로 발음이 비슷한 경우도 인식
+    - 언어별 wakeword 리스트에 있는 키워드가 포함되어 있거나 유사하면 true
     """
     if not text:
         return False
+    
     norm = text.lower().strip()
-    for ch in [",", ".", "?", "!", "'", '"']:
+    # 구두점 제거
+    for ch in [",", ".", "?", "!", "'", '"', "-", " "]:
         norm = norm.replace(ch, "")
+    
+    # 정확한 매칭 먼저 시도
     for w in _wakewords_for_lang(lang):
-        candidate = w.replace(",", "").replace(".", "").lower()
-        if candidate in norm:
+        candidate = w.replace(",", "").replace(".", "").replace("-", "").replace(" ", "").lower()
+        if candidate in norm or norm in candidate:
             return True
+    
+    # Fuzzy matching으로 유사한 발음도 인식
+    # "dori" 패턴에 대해 fuzzy match (더 관대한 매칭)
+    core_patterns = ["dori", "dory", "tori", "도리"] if not lang.startswith("ko") else ["도리", "dori"]
+    
+    for pattern in core_patterns:
+        if _fuzzy_match(norm, pattern, max_distance=2):
+            return True
+    
     return False
 
 
@@ -69,8 +139,12 @@ def _voice_listener_loop(on_detect: WakeWordCallback, default_lang: str = "en"):
         text, detected_lang = listen_for_seconds_with_lang(seconds=3)
         if text:
             normalized = text.lower().strip()
-            lang_to_use = detected_lang or default_lang
-            print(f"[WakeWord] STT captured: {normalized} (detected={detected_lang})")
+            # 제한: ko/en만 사용, 그 외는 en으로 처리
+            if detected_lang and detected_lang.startswith("ko"):
+                lang_to_use = "ko"
+            else:
+                lang_to_use = "en"
+            print(f"[WakeWord] STT captured: {normalized} (detected={detected_lang}, used={lang_to_use})")
             now = time.time()
             if now - last_trigger < WAKEWORD_COOLDOWN:
                 time.sleep(0.2)

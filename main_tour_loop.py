@@ -1,6 +1,7 @@
 # main_tour_loop.py
 
 import time
+import re
 from tour_route import TOUR_ROUTE
 from stt_service import listen_for_seconds
 from tts_service import speak
@@ -15,13 +16,9 @@ PHRASES = {
         "ko": "{spot_name}에 도착했습니다.",
         "en": "We have arrived at {spot_name}.",
     },
-    "next_move": {
-        "ko": "다음 장소로 이동합니다.",
-        "en": "Moving to the next spot.",
-    },
     "tour_start_welcome": {
-        "ko": "안녕하세요! 도리 투어에 오신 것을 환영합니다.",
-        "en": "Hello! Welcome to the Dori tour.",
+        "ko": "도리 투어에 오신 것을 환영합니다.",
+        "en": "Welcome to the Dori tour.",
     },
     "tour_start_move": {
         "ko": "그럼 이제 첫 번째 장소로 이동하겠습니다.",
@@ -30,10 +27,6 @@ PHRASES = {
     "tour_end": {
         "ko": "모든 투어가 끝났습니다. 함께해주셔서 감사합니다!",
         "en": "The tour is finished. Thank you for joining!",
-    },
-    "intro_arrival": {
-        "ko": "다음 장소에 도착했습니다.",
-        "en": "We have reached the next spot.",
     },
     "qa_intro": {
         "ko": "설명이 끝났습니다. 질문이 있으신가요? 있으시면 말씀해주세요. 없으시면 ‘패스’라고 말해주셔도 좋아요.",
@@ -134,9 +127,6 @@ def run_spot_intro(spot_code, lang):
     """
     scripts = SPOT_SCRIPTS.get(lang, {}).get(spot_code) or SPOT_SCRIPTS["en"].get(spot_code, [])
 
-    speak(PHRASES["intro_arrival"][lang], lang)
-    time.sleep(0.3)
-
     for text in scripts:
         speak(text, lang)
         time.sleep(0.3)
@@ -171,8 +161,12 @@ def run_qa_session(spot_code, lang):
         normalized = user_text.lower().strip()
 
         # --- '패스' 계열 발화 처리 ---
-        PASS_WORDS = ["패스", "없어", "괜찮아", "pass", "no", "없습니다", "아니오"]
-        if any(p in normalized for p in PASS_WORDS):
+        # Use word boundaries to avoid matching "no" in "know" or "not"
+        PASS_WORDS = ["패스", "없어", "괜찮아", "pass", "no", "없습니다", "아니오", "skip", "next"]
+        # Check for whole words only (word boundaries)
+        words_in_text = set(re.findall(r'\b\w+\b', normalized))
+        pass_words_set = set(p.lower() for p in PASS_WORDS)
+        if words_in_text.intersection(pass_words_set):
             speak(PHRASES["qa_pass"][lang], lang)
             return
 
@@ -244,9 +238,6 @@ def start_dori_tour(lang="ko"):
         # 사진 스팟이면 사진 모드 실행
         if is_photo_spot:
             run_photo_mode(lang)
-
-        speak(PHRASES["next_move"][lang], lang)
-        time.sleep(1)
 
     speak(PHRASES["tour_end"][lang], lang)
 
