@@ -1,231 +1,334 @@
-🐧 DORI — Multilingual Autonomous Tour Guide Robot
-DORI Graduation Project
-
-
-다국어 관광 안내 로봇 — 스팟 설명 + RAG 기반 Q&A + 포토스팟 + 웨이크워드
-
-
-📌 프로젝트 개요
-
-DORI는 경복궁을 따라 이동하며 관광객에게 다국어 설명을 제공하고,
-사용자의 질문을 RAG 기반 LLM으로 정확하게 답변해주는
-자율주행 관광 안내 로봇입니다.
-
-이번 학기 목표는:
-
-특정 스팟에 대한 설명(TTS)
-
-음성 기반 Q&A(STT + RAG + LLM + TTS)
-
-포토 스팟에서 사진 안내
-
-웨이크워드 "Hey Dori" → 투어 시작
-
-까지의 완전 동작 데모를 구현하는 것입니다.
-
-🧱 프로젝트 전체 구조
-
-<img width="426" height="268" alt="image" src="https://github.com/user-attachments/assets/4b34908c-66f7-4c30-8a2c-ff295509caa1" />
-
-
-🔧 기술 스택
-
-| 분야      | 사용 기술                                        |
-| ------- | -------------------------------------------- |
-| 언어      | Python 3.11                                  |
-| STT/TTS | Google Cloud Speech-to-Text / Text-to-Speech |
-| DB      | PostgreSQL + psycopg2                        |
-| RAG     | FAISS + e5-small-v2 + gte-small 임베딩          |
-| LLM     | 로컬(ollama / llama.cpp 등)                     |
-| 배포      | Docker / docker-compose                      |
-| 하드웨어    | Unitree Go2 + NVIDIA Orin                    |
-
-
-🎯 핵심 기능
-✔ 스팟별 안내 멘트 (다국어 TTS)
-
-영어 원본 스크립트 → 번역 → TTS 재생
-
-✔ RAG 기반 Q&A
-
-Google STT로 사용자 음성 인식
-
-번역 → RAG 검색 → LLM 답변 → 번역 → TTS
-
-“근정전은 언제 지어졌나요?” 같은 질문도 문맥 기반으로 정확하게 답변
-
-✔ 10초 대기 후 자동 다음 스팟 이동
-
-질문이 없으면 “다음 장소로 이동합니다”
-
-✔ 포토 스팟
-
-사진이 잘 나오는 지점에서 사진 촬영 안내
-
-✔ 웨이크워드 “Hey Dori”
-
-추후 Porcupine/Whisper 등 연결 예정
-
-현재는 테스트용 키보드 기반 wakeword 구현
-
-📦 주요 파일 설명 (한–두 줄로 정리)
-
-아래 템플릿은 팀원들이 바로 이해하기 좋도록 주석 스타일 설명으로 정리했어.
-
-
-📁 app/
-
-dori_main.py
-
-전체 엔트리 포인트. 웨이크워드 감지 → 인사 → 전체 투어 루프 실행.
-
-main_tour_loop.py
-
-스팟 이동/설명/Q&A/포토스팟까지 전체 투어를 순차적으로 실행하는 메인 로직.
-
-multilingual_orchestrator.py
-
-하나의 Q&A 턴을 처리 (STT → 번역 → RAG → LLM → 번역 → TTS).
-
-tts_service.py
-
-Google TTS를 통해 PCM 오디오 생성 후 sounddevice 로 재생.
-
-tts_utils.py
-
-PyAudio 기반 테스트용 TTS 재생 모듈.
-
-stt_service.py
-
-Google Speech-to-Text API로 음성 인식 처리.
-
-wakeword_service.py
-
-“Hey Dori” 웨이크워드 감지 (현재는 콘솔 테스트용).
-
-translation_service.py
-
-번역 모듈 (일반번역 / 질문 → 영어 / 답변 → 사용자 언어). LLM을 사용해서 번역.
-
-llm_client.py
-
-로컬 LLM 호출 래퍼. Ollama/llama.cpp/vLLM 중 하나로 구현 가능.
-
-rag_pipeline.py
-
-RAG 전체 파이프라인: 스크립트 불러오기 / 문맥 생성 / LLM 프롬프트 구성.
-
-faiss_retriever.py
-
-질문 임베딩 → FAISS 검색 → 관련 knowledge_docs 반환.
-
-embedding_client.py
-
-e5 + gte 임베딩 결합하여 RAG 검색 품질을 향상시키는 모듈.
-
-db_utils.py
-
-PostgreSQL CRUD 유틸리티. spots/scripts/knowledge_docs 관리.
-
-tour_route.py
-
-경복궁 스팟 순서 및 스폿 코드 정의.
-
-01_seed_spots.py
-
-tour_route 기반으로 스팟 정보 DB에 삽입.
-
-02_seed_knowledge_docs.py
-
-RAG용 knowledge_docs 삽입.
-
-03_build_faiss_index.py
-
-knowledge_docs 임베딩 계산 후 FAISS 인덱스 생성.
-
-
-📁 db/
-schema.sql
-
-PostgreSQL 테이블 구조 정의.
-
-sample_data.sql
-
-기본 languages / place 데이터 삽입.
-
-
-📁 credentials/
-(Google Service Account JSON)
-
-STT/TTS API를 위한 GCP 서비스 계정 키. (절대 깃허브 공개 저장소에 올리면 안 됨)
-
-기타
-Dockerfile
-
-dori-app 컨테이너 빌드 스크립트.
-
-docker-compose.yml
-
-PostgreSQL + dori-app을 한 번에 띄우는 서비스 구성.
-
-requirements.txt
-
-Python 의존성 목록.
-
-
-🚀 실행 방법 (개발)
-1. 가상환경 생성
-
+# 🐧 DORI — Multilingual Autonomous Tour Guide Robot
+
+**DORI (다국어 관광 안내 로봇)** is an autonomous tour guide robot system designed to provide multilingual guidance to tourists visiting cultural heritage sites, specifically Gyeongbokgung Palace in Seoul, South Korea.
+
+## 📋 Project Overview
+
+DORI integrates three core modules:
+1. **Multilingual Q&A System** with RAG-based LLM for intelligent question answering
+2. **Photographer Dori** for automated tourist photography (framework implemented)
+3. **Autonomous Navigation** using sensor fusion (planned)
+
+The system supports **8 languages** (English, Korean, Japanese, Chinese, French, Spanish, Vietnamese, Thai) and provides real-time speech-to-speech interaction with context-aware answers using Retrieval-Augmented Generation (RAG).
+
+## ✅ Completed Features
+
+### Core Infrastructure
+- ✅ **PostgreSQL Database**: Hierarchical structure (Places → Spots → Scripts)
+- ✅ **Knowledge Base**: 30+ knowledge documents for RAG
+- ✅ **FAISS Vector Index**: Fast semantic search for context retrieval
+- ✅ **Dual Embedding Models**: e5-small-v2 + gte-small for enhanced retrieval
+
+### Multilingual Support
+- ✅ **8 Languages**: English, Korean, Japanese, Chinese, French, Spanish, Vietnamese, Thai
+- ✅ **Runtime Translation**: LLM-based translation pipeline
+- ✅ **Translation Caching**: Optimized performance with cached translations
+- ✅ **Language Auto-Detection**: Automatic detection from wakeword
+
+### Speech Services
+- ✅ **STT (Speech-to-Text)**: Google Cloud Speech-to-Text integration
+- ✅ **TTS (Text-to-Speech)**: Google Cloud Text-to-Speech with natural voice synthesis
+- ✅ **Multi-language Recognition**: Supports all 8 languages
+
+### Wakeword Detection
+- ✅ **Voice-based Detection**: "Hey Dori" (English) / "도리야" (Korean)
+- ✅ **Fuzzy Matching**: Handles pronunciation variations using Levenshtein distance
+- ✅ **Language Auto-Detection**: Determines user language from wakeword
+- ✅ **Cooldown Mechanism**: Prevents duplicate triggers
+
+### Tour Loop System
+- ✅ **Complete Tour Orchestration**: Sequential navigation through 6 spots
+- ✅ **Spot Introduction**: TTS narration for each location
+- ✅ **Q&A Sessions**: Interactive question-answering with 10-second timeout
+- ✅ **Inline Wakeword Interrupt**: Users can interrupt during narration
+- ✅ **Automatic Progression**: Moves to next spot if no questions
+
+### Q&A System with RAG
+- ✅ **RAG Pipeline**: FAISS-based semantic search from knowledge base
+- ✅ **LLM Integration**: Local LLM via LM Studio (Llama-3.1-8B-Instruct)
+- ✅ **Proper Noun Normalization**: Handles mispronunciations of palace names
+- ✅ **Multi-turn Q&A**: Supports follow-up questions
+- ✅ **"Pass" Command**: Users can skip questions
+- ✅ **RAG Toggle**: Can enable/disable RAG via config flag
+
+### Photo Spot Feature
+- ✅ **Photo Spot Detection**: Identifies designated photo locations
+- ✅ **Positioning Instructions**: Guides users to optimal positions
+- ✅ **Countdown System**: 5-second countdown before capture
+- ⚠️ **Camera Integration**: Framework ready, hardware integration pending
+
+## 🏗️ System Architecture
+
+### Technology Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Programming Language** | Python 3.11 |
+| **Database** | PostgreSQL + psycopg2 |
+| **Speech Recognition** | Google Cloud Speech-to-Text |
+| **Speech Synthesis** | Google Cloud Text-to-Speech |
+| **LLM** | Local LLM (LM Studio / Ollama / llama.cpp) |
+| **RAG** | FAISS + e5-small-v2 + gte-small embeddings |
+| **Deployment** | Docker / docker-compose |
+| **Hardware** | Unitree Go2 Quadruped Robot + NVIDIA Orin |
+
+### Data Flow
+
+**Q&A Pipeline:**
+```
+User Speech → STT (Google) → Language Detection
+    ↓
+Translation (User Lang → English) → RAG Context Retrieval
+    ↓
+LLM Answer Generation → Translation (English → User Lang)
+    ↓
+TTS (Google Cloud) → Audio Output
+```
+
+**Tour Flow:**
+```
+Wakeword Detection → Language Auto-Detection → Greeting
+    ↓
+For each spot (6 spots):
+    - Arrival Announcement
+    - Spot Introduction (TTS)
+    - Q&A Session (10s timeout)
+    - Photo Spot Check (if applicable)
+    ↓
+Tour Completion Message
+```
+
+## 📁 Project Structure
+
+```
+dori-project/
+├── app/
+│   ├── dori_main.py              # Entry point: wakeword detection → tour start
+│   ├── main_tour_loop.py         # Main tour orchestration logic
+│   ├── tour_route.py             # Tour route definition (6 spots)
+│   ├── stt_service.py            # Google Cloud Speech-to-Text
+│   ├── tts_service.py            # Google Cloud Text-to-Speech
+│   ├── wakeword_service.py       # Wakeword detection ("Hey Dori")
+│   ├── translation_service.py    # LLM-based translation
+│   ├── llm_client.py             # Local LLM interface (LM Studio/Ollama)
+│   ├── rag_pipeline.py           # RAG context building
+│   ├── faiss_retriever.py       # FAISS vector search
+│   ├── embedding_client.py      # Dual embedding models
+│   ├── db_utils.py              # PostgreSQL CRUD operations
+│   ├── config.py                # Configuration (RAG toggle, DB settings)
+│   ├── 00_init_db.py            # Database initialization
+│   ├── 01_seed_spots.py         # Seed spot data
+│   ├── 02_seed_knowledge_docs.py # Seed knowledge base
+│   └── 03_build_faiss_index.py   # Build FAISS index
+├── db/
+│   ├── schema.sql               # Database schema
+│   └── sample_data.sql          # Sample data
+├── faiss_index_en.bin           # FAISS vector index
+├── faiss_ids_en.npy             # FAISS document IDs
+├── requirements.txt             # Python dependencies
+└── README.md                    # This file
+```
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+- Python 3.11+
+- PostgreSQL database
+- Google Cloud credentials for STT/TTS
+- Local LLM server (LM Studio / Ollama)
+
+### 1. Clone and Install Dependencies
+
+```bash
+# Create virtual environment
 python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-source venv/bin/activate
-
+# Install dependencies
 pip install -r requirements.txt
+```
 
-3. 환경설정
+### 2. Database Setup
 
-export GOOGLE_APPLICATION_CREDENTIALS=./credentials/gcp-service-account.json
-
-4. DB 준비
-
+```bash
+# Create database
 psql -U postgres -c "CREATE DATABASE dori;"
 
+# Initialize schema
+psql -U postgres -d dori -f db/schema.sql
+psql -U postgres -d dori -f db/sample_data.sql
+```
+
+### 3. Configure Environment
+
+```bash
+# Set Google Cloud credentials
+export GOOGLE_APPLICATION_CREDENTIALS=./credentials/gcp-service-account.json
+
+# Update database credentials in app/config.py
+# DB_HOST, DB_NAME, DB_USER, DB_PASSWORD
+```
+
+### 4. Seed Data and Build Index
+
+```bash
+# Seed spots
 python app/01_seed_spots.py
 
+# Seed knowledge documents
 python app/02_seed_knowledge_docs.py
 
+# Build FAISS index
 python app/03_build_faiss_index.py
+```
 
-5. 엔트리 포인트 실행
+### 5. Start Local LLM Server
 
+**Option A: LM Studio**
+- Download and install LM Studio
+- Load model: `Llama-3.1-8B-Instruct-GGUF`
+- Start local server on `http://127.0.0.1:1234`
+
+**Option B: Ollama**
+```bash
+ollama pull llama3.1:8b
+ollama serve
+```
+
+### 6. Run the Application
+
+```bash
 python app/dori_main.py
+```
 
-🐳 Docker 실행 방법
-1. 빌드
+## 🎯 Usage
 
-docker-compose build
+### Starting a Tour
 
-2. 실행
+1. **Wakeword Activation**: Say "Hey Dori" (English) or "도리야" (Korean)
+2. **Language Detection**: System automatically detects your language
+3. **Tour Begins**: Robot greets you and starts the tour
 
-docker-compose up
+### During the Tour
 
-3. 로그 보기
+- **Spot Introductions**: Robot narrates information about each location
+- **Q&A Sessions**: Ask questions after each spot introduction
+  - Wait for "Do you have any questions?" prompt
+  - Ask your question (10-second timeout)
+  - Robot answers using RAG + LLM
+  - Say "pass" to skip questions
+- **Photo Spots**: At designated locations, robot will guide you for photos
 
-docker logs -f dori-app
+### Tour Route
 
-🧭 투어 흐름 요약
+The tour visits 6 spots in order:
+1. **Gwanghwamun** (광화문) - Main gate
+2. **Heungnyemun** (흥례문) - Second gate
+3. **Geunjeongmun** (근정문) - Third gate
+4. **Geunjeongjeon** (근정전) - Main throne hall
+5. **Sujeongjeon** (수정전) - Discussion hall
+6. **Gyeonghoeru** (경회루) - Photo spot pavilion
 
-<img width="298" height="279" alt="image" src="https://github.com/user-attachments/assets/acf210b3-871f-4479-b5b4-4a27e4c40c30" />
+## ⚙️ Configuration
 
+### RAG Toggle
 
-🙌 팀원들이 알아야 할 핵심 요약
+Edit `app/config.py` to enable/disable RAG:
 
-영어가 base 데이터이고, 필요한 언어는 모두 “번역 서비스”로 처리.
+```python
+ENABLE_RAG = True   # Use knowledge base for context-aware answers
+ENABLE_RAG = False  # Use LLM general knowledge only
+```
 
-STT/TTS는 Google Cloud, Q&A는 로컬 LLM + RAG + 번역.
+**When RAG is enabled:**
+- Answers use context from knowledge_docs
+- More accurate, site-specific information
+- Better handling of historical/cultural questions
 
-전체 동작은 dori_main.py → main_tour_loop.py가 담당.
+**When RAG is disabled:**
+- LLM uses general knowledge only
+- Faster response (no retrieval step)
+- Useful for comparing answer quality
 
-데이터/임베딩/LLM 모두 Docker로 배포 가능.
+### Database Configuration
 
-Unitree Go2 + Orin에서는 docker-compose만 실행하면 됨.
+Update `app/config.py` with your database credentials:
+
+```python
+DB_HOST = "localhost"
+DB_NAME = "dori"
+DB_USER = "postgres"
+DB_PASSWORD = "your_password"
+```
+
+## 📊 Current Status
+
+### Completed: ~85%
+- ✅ Core infrastructure and database
+- ✅ Multilingual support system (8 languages)
+- ✅ Speech services (STT/TTS)
+- ✅ Wakeword detection
+- ✅ Tour loop and navigation
+- ✅ Q&A with RAG
+- ✅ Knowledge base (30+ documents)
+- ✅ Photo spot framework
+
+### In Progress: ~15%
+- ⏳ Hardware integration (navigation, camera)
+- ⏳ Enhanced wakeword (Porcupine/Whisper)
+- ⏳ Production deployment on Unitree Go2
+- ⏳ Sensor fusion for GPS-based navigation
+
+## 🔮 Future Work
+
+### Priority 1: Hardware Integration
+- GPS-based autonomous navigation
+- Camera integration for photo capture
+- Unitree Go2 control system integration
+
+### Priority 2: Production Readiness
+- Deploy on Unitree Go2 + NVIDIA Orin
+- Performance optimization
+- Enhanced error handling
+
+### Priority 3: Feature Enhancement
+- Porcupine wakeword integration
+- Enhanced RAG context filtering
+- User feedback analysis system
+- Support for additional languages
+
+## 🧪 Testing RAG Utility
+
+To compare RAG-enabled vs RAG-disabled responses:
+
+1. **Enable RAG**: Set `ENABLE_RAG = True` in `config.py`
+2. **Test Questions**: Ask site-specific questions (e.g., "When was Geunjeongjeon built?")
+3. **Disable RAG**: Set `ENABLE_RAG = False`
+4. **Test Same Questions**: Compare answer quality and accuracy
+
+## 📝 Key Design Decisions
+
+1. **English as Source Language**: All content stored in English, translated at runtime
+2. **RAG for Q&A**: Ensures accurate, context-aware answers from knowledge base
+3. **Local LLM**: Privacy and offline capability
+4. **Modular Architecture**: Easy to extend with new spots, languages, or features
+5. **Proper Noun Normalization**: Handles mispronunciations of palace names
+
+## 🤝 Contributing
+
+This is a graduation project. For questions or contributions, please contact the project team.
+
+## 📄 License
+
+[Specify your license here]
+
+## 🙏 Acknowledgments
+
+- **Q&A & Multilingual System**: [Team Member]
+- **Photography Module**: Minseo
+- **Autonomous Navigation**: [Team Member]
+
+---
+
+**Institution**: [Your University/Institution]  
+**Date**: 2024
