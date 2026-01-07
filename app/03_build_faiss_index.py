@@ -1,4 +1,4 @@
-# 04_build_faiss_index.py
+# 03_build_faiss_index.py
 
 import numpy as np
 import faiss
@@ -16,7 +16,7 @@ def main():
     docs = get_all_knowledge_docs(language="en")
 
     if not docs:
-        print("⚠️ No knowledge_docs found. Did you run 03_seed_knowledge_docs.py?")
+        print("⚠️ No knowledge_docs found. Did you run 02_seed_knowledge_docs.py?")
         return
 
     texts = [d["text"] for d in docs]
@@ -44,3 +44,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

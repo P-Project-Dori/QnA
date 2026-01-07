@@ -31,20 +31,13 @@ def on_wakeword_detected(detected_lang: str = "en"):
     if USER_LANG == "ko":
         greeting = "안녕하세요, 저는 도리입니다. 지금부터 경복궁 안내를 시작하겠습니다."
     else:
-        greeting = "Hello, I am Dori. I will now start the tour of Gyeongbokgung Palace."
+        greeting = "Hello, I am Dori. I will now start the tour of Gyeong-bok-gung Palace."
 
     speak(greeting, lang=USER_LANG)
 
     # 2) 메인 투어 실행
     start_dori_tour(lang=USER_LANG)
 
-    # 3) 투어 종료 후 한 마디 더 (원하면)
-    if USER_LANG == "ko":
-        bye_msg = "투어가 모두 끝났습니다. 도리와 함께해 주셔서 감사합니다."
-    else:
-        bye_msg = "The tour has finished. Thank you for joining Dori."
-
-    speak(bye_msg, lang=USER_LANG)
     print("[ENTRY] Tour finished.")
 
 
@@ -54,9 +47,14 @@ def main():
     - 웨이크워드 리스너를 시작하고
     - 사용자가 'Hey Dori'를 말할 때까지 대기.
     """
+    from config import ENABLE_RAG
+    
     print("==============================================")
     print(" DORI - Multilingual Tour Guide Robot (Demo) ")
     print("==============================================")
+    print()
+    print(f"📚 RAG Status: {'ENABLED' if ENABLE_RAG else 'DISABLED'}")
+    print(f"   (Toggle in config.py: ENABLE_RAG = {ENABLE_RAG})")
     print()
     global USER_LANG
 

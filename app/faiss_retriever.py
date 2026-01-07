@@ -28,13 +28,19 @@ class FaissRetriever:
         return padded
 
     def search(self, question: str):
+        """
+        Search FAISS index and return knowledge_doc IDs.
+        Returns: list of integer document IDs
+        """
         query_emb_raw = embed_query(question).astype("float32")
         query_emb = self._fit_dim(query_emb_raw)[None, :]
         scores, idxs = self.index.search(query_emb, self.top_k)
 
-        docs = []
+        # Extract document IDs from the stored array
+        doc_ids = []
         for idx in idxs[0]:
-            doc_meta = self.doc_ids[idx].item()
-            docs.append(doc_meta)
+            # self.doc_ids is an array of integers (knowledge_doc.id)
+            doc_id = int(self.doc_ids[idx])
+            doc_ids.append(doc_id)
 
-        return docs
+        return doc_ids

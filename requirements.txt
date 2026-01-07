@@ -1,0 +1,16 @@
+psycopg2-binary
+numpy
+faiss-cpu
+sounddevice
+scipy
+google-cloud-speech
+google-cloud-texttospeech
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pyyaml
+requests
+tqdm
+langdetect
+whisper
+pygame

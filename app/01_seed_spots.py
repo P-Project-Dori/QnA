@@ -9,7 +9,7 @@ def main():
         insert_spot(
             code=spot["spot_code"],
             name_en=spot["name_en"],
-            order_no=spot["order_no"],
+            order_no=spot["order"],
             lat=None, #GPS
             lng=None, #GPS
             is_photo_spot=spot["is_photo_spot"],

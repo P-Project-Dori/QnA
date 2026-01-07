@@ -24,3 +24,12 @@ INSERT INTO places (id, order_in_tour, title_en, description_en) VALUES
         'The main royal palace of the Joseon dynasty and one of the most iconic landmarks in Seoul.'
     )
 ON CONFLICT (id) DO NOTHING;
+
+
+
+
+
+
+
+
+

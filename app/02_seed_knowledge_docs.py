@@ -1,4 +1,4 @@
-# 03_seed_knowledge_docs.py
+# 02_seed_knowledge_docs.py
 
 from db_utils import insert_knowledge_doc_for_spot_code
 
@@ -29,7 +29,7 @@ KNOWLEDGE_DOCS = {
     "heungnyemun": [
         {
             "text": (
-                "Heungnyemun (興禮門) is the central gate of Gyeongbokgung Palace. "
+                "Heungnyemun is the central gate of Gyeongbokgung Palace. "
                 "'Heungnye' means 'to raise up rites.' Originally called 'Hongnyemun,' "
                 "it was renamed to its current name in 1867 (the 4th year of King Gojong's reign) "
                 "during the reconstruction of Gyeongbokgung Palace."
@@ -71,7 +71,7 @@ KNOWLEDGE_DOCS = {
     "geunjeongmun": [
         {
             "text": (
-                "Geunjeongmun Gate (勤政門) is the main gate of Geunjeongjeon Hall. "
+                "Geunjeongmun Gate is the main gate of Geunjeongjeon Hall. "
                 "It features a hipped roof with three bays at the front and two bays at the side. "
                 "It is the only main gate of a palace main hall with a two-story structure."
             ),
@@ -92,7 +92,7 @@ KNOWLEDGE_DOCS = {
     "geunjeongjeon": [
         {
             "text": (
-                "Geunjeongjeon Hall (勤政殿) is the main hall of Gyeongbokgung Palace. "
+                "Geunjeongjeon Hall is the main hall of Gyeongbokgung Palace. "
                 "It was used for important state events, such as the king's coronation, ceremonies for court officials, "
                 "receptions of foreign envoys, and royal banquets. The name 'Geunjeong' in Geunjeongjeon means 'to diligently govern the world.' "
                 "It is the largest and most formal building in the palace, occupying the largest area."
@@ -161,7 +161,7 @@ KNOWLEDGE_DOCS = {
     "sujeongjeon": [
         {
             "text": (
-                "The 'Sujeong' in Sujeongjeon Hall (修政殿) means 'to conduct politics well.' "
+                "The 'Sujeong' in Sujeongjeon Hall means 'to conduct politics well.' "
                 "This building served as a side hall during the reign of King Gojong. "
                 "It wasn't present when Gyeongbokgung Palace was first built, but was added during the reconstruction of the palace."
             ),
@@ -172,7 +172,7 @@ KNOWLEDGE_DOCS = {
         {
             "text": (
                 "In 1894 (the 31st year of King Gojong's reign), during the Gabo Reforms, the Office of Military Affairs was established here. "
-                "Later, when the Uijeongbu (議政府) was transformed into the Naegak (內閣), it served as the cabinet's headquarters."
+                "Later, when the Uijeongbu was transformed into the Naegak, it served as the cabinet's headquarters."
             ),
             "source_type": "extra",
             "source_ref": "wiki:sujeongjeon:gabo_reforms",
@@ -284,3 +284,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

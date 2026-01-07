@@ -20,6 +20,7 @@ SUPPORTED_LANGUAGES = {
 def _build_translation_prompt(text: str, src: LanguageCode, tgt: LanguageCode) -> str:
     """
     일반적인 문장 번역용 프롬프트 (안내 멘트, 답변 등).
+    자연스럽고 자연스러운 번역을 위해 개선됨.
     """
     if src == tgt:
         return text
@@ -29,12 +30,17 @@ def _build_translation_prompt(text: str, src: LanguageCode, tgt: LanguageCode) -
 
     return (
         "You are a professional multilingual tour guide translator.\n"
-        f"Translate the following text from {src_name} to {tgt_name}.\n"
-        "Do not add explanations, comments, or extra sentences.\n"
-        "Preserve place names and proper nouns.\n\n"
-        "[Source]\n"
+        f"Translate the following tour guide script from {src_name} to {tgt_name}.\n\n"
+        "TRANSLATION GUIDELINES:\n"
+        "- Translate naturally and fluently, as if speaking to a tourist\n"
+        "- Preserve all place names, proper nouns, and historical terms exactly\n"
+        "- Maintain the original tone and style (informative but friendly)\n"
+        "- Do not add explanations, comments, or extra sentences\n"
+        "- Keep the same sentence structure when possible\n"
+        "- Ensure the translation sounds natural in the target language\n\n"
+        "[Source Text]\n"
         f"{text}\n\n"
-        f"[Translation in {tgt_name}]\n"
+        f"[Natural Translation in {tgt_name}]\n"
     )
 
 
@@ -61,6 +67,7 @@ def _build_question_to_en_prompt(text: str, src: LanguageCode) -> str:
 def _build_answer_from_en_prompt(text: str, tgt: LanguageCode) -> str:
     """
     영어 답변을 사용자 언어로 번역할 때 사용하는 프롬프트.
+    자연스럽고 정확한 번역을 위해 개선됨.
     """
     if tgt == "en":
         return text
@@ -68,25 +75,32 @@ def _build_answer_from_en_prompt(text: str, tgt: LanguageCode) -> str:
     tgt_name = SUPPORTED_LANGUAGES[tgt]
 
     return (
-        "You are a tour guide translator.\n"
-        "Translate the following answer from English to "
-        f"{tgt_name} using a polite and friendly tone.\n"
-        "Do not add extra sentences.\n\n"
+        "You are a professional tour guide translator.\n"
+        f"Translate the following answer from English to {tgt_name}.\n\n"
+        "TRANSLATION GUIDELINES:\n"
+        "- Use a polite, friendly, and natural tone\n"
+        "- Preserve all place names, proper nouns, and historical terms exactly\n"
+        "- Keep the meaning and nuance exactly the same\n"
+        "- Make it sound natural in the target language\n"
+        "- Do not add extra sentences or explanations\n"
+        "- Maintain the same level of formality\n\n"
         "[Answer in English]\n"
         f"{text}\n\n"
-        f"[Answer in {tgt_name}]\n"
+        f"[Natural Translation in {tgt_name}]\n"
     )
 
 
 def translate(text: str, src: LanguageCode, tgt: LanguageCode) -> str:
     """
     일반 텍스트 번역(안내 멘트, 설명 등)에 사용.
+    자연스럽고 정확한 번역을 위해 개선된 프롬프트 사용.
     """
     if src == tgt:
         return text
 
     prompt = _build_translation_prompt(text, src, tgt)
-    result = call_llm(prompt)
+    # Slightly higher token limit for better translation quality
+    result = call_llm(prompt, temperature=0.3, max_tokens=256)
     return result.strip()
 
 
@@ -105,10 +119,12 @@ def translate_question_to_en(user_question: str, src: LanguageCode) -> str:
 def translate_answer_from_en(answer_en: str, tgt: LanguageCode) -> str:
     """
     영어 답변을 사용자 언어로 번역.
+    자연스럽고 정확한 번역을 위해 개선된 프롬프트 사용.
     """
     if tgt == "en":
         return answer_en
 
     prompt = _build_answer_from_en_prompt(answer_en, tgt)
-    result = call_llm(prompt)
+    # Slightly higher token limit for better translation quality
+    result = call_llm(prompt, temperature=0.3, max_tokens=256)
     return result.strip()

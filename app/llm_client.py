@@ -49,24 +49,3 @@ def ask_local_llm(messages, temperature=0.7, max_tokens=512):
         return "죄송합니다. LLM 요청 중 오류가 발생했습니다."
 
 
-def answer_question_with_rag(question: str, context: str, lang="ko"):
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are Dori, a multilingual tour guide robot. "
-                "Use ONLY the given context to answer. "
-                "If the answer is not found in the context, say '저는 그 정보는 가지고 있지 않아요.'"
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                f"[Context]\n{context}\n\n"
-                f"[Question]\n{question}\n\n"
-                f"답변은 반드시 {lang} 언어로 제공해줘."
-            ),
-        },
-    ]
-
-    return ask_local_llm(messages)

@@ -6,7 +6,7 @@ import pygame
 
 # ===== ElevenLabs Voice IDs =====
 ELEVENLABS_VOICES = {
-    "ko": "0IhKyLYnD1w7n6ZVziN1",  # Korean voice
+    "ko": "uyVNoMrnUku1dZyVEXwD",  # Korean voice
     "en": "nBoLwpO4PAjQaQwVKPI1",  # English voice
     # For other languages, default to English voice
     "zh": "nBoLwpO4PAjQaQwVKPI1",
@@ -62,15 +62,15 @@ def speak(text: str, lang="ko", speaking_rate=1.0, pitch=0.0):
         "xi-api-key": api_key
     }
     
-    # ElevenLabs API 파라미터
+    # ElevenLabs API 파라미터 - Consistent settings for all TTS calls
     data = {
         "text": text,
         "model_id": "eleven_multilingual_v2",  # 다국어 지원 모델
         "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75,
-            "style": 0.0,
-            "use_speaker_boost": True
+            "stability": 0.5,  # Consistent stability
+            "similarity_boost": 0.75,  # Consistent similarity
+            "style": 0.0,  # Consistent style
+            "use_speaker_boost": True  # Always use speaker boost for maximum clarity
         }
     }
     
@@ -82,15 +82,27 @@ def speak(text: str, lang="ko", speaking_rate=1.0, pitch=0.0):
         mp3_data = response.content
         
         # Initialize pygame mixer if not already initialized
+        # Use consistent audio settings for all playback to ensure uniform quality
         if not pygame.mixer.get_init():
-            pygame.mixer.init()
+            pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+        
+        # Stop any currently playing music to ensure clean playback
+        pygame.mixer.music.stop()
         
         # Load MP3 from memory using pygame (no file I/O)
         mp3_file = io.BytesIO(mp3_data)
         pygame.mixer.music.load(mp3_file)
         
+        # Always set volume to maximum (1.0) right before playback
+        # This ensures consistent volume across all scripts and Q&A
+        # Set volume multiple times to ensure it's applied
+        pygame.mixer.music.set_volume(1.0)
+        
         # Play and wait for completion
         pygame.mixer.music.play()
+        
+        # Set volume again after starting playback to ensure it's at maximum
+        pygame.mixer.music.set_volume(1.0)
         
         # Wait until playback is finished
         while pygame.mixer.music.get_busy():
