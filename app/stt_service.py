@@ -41,8 +41,10 @@ WHISPER_LANGS = {
 # ===== Whisper Model Configuration =====
 # Options: "tiny", "base", "small", "medium", "large"
 # "base" provides better accuracy than "tiny" with reasonable speed
-# "small" is even better but slower
-WHISPER_MODEL_SIZE = "base"  # Upgraded from "tiny" for better accuracy
+# "small" is even better but slower - better for pronunciation understanding
+# "medium" provides excellent accuracy but is slower
+# "large" provides best accuracy but is slowest
+WHISPER_MODEL_SIZE = "small"  # Upgraded from "base" for better pronunciation understanding
 
 # Confidence threshold: reject transcriptions below this average logprob
 # Typical values: -1.5 (very lenient) to -0.5 (strict)

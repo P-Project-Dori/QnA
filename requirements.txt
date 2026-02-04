@@ -14,3 +14,4 @@ tqdm
 langdetect
 whisper
 pygame
+openai

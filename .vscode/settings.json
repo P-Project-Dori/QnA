@@ -1,0 +1,23 @@
+{
+  // Ensure all files are saved as UTF-8 without BOM
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false,
+  
+  // SQL files should always be UTF-8
+  "[sql]": {
+    "files.encoding": "utf8"
+  },
+  
+  // Python files should always be UTF-8
+  "[python]": {
+    "files.encoding": "utf8"
+  },
+  
+  // Line endings: use LF for consistency (Unix-style)
+  "files.eol": "\n",
+  
+  // Auto-save settings
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000
+}
+

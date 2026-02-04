@@ -127,3 +127,15 @@ CREATE INDEX IF NOT EXISTS idx_qa_logs_spot_lang
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+

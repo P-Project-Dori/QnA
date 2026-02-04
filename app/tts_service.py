@@ -10,12 +10,12 @@ import pygame
 ELEVENLABS_VOICES = {
     "ko": "uyVNoMrnUku1dZyVEXwD",  # Korean voice
     "en": "nBoLwpO4PAjQaQwVKPI1",  # English voice
+    "zh": "hkfHEbBvdQFNX4uWHqRF",
+    "ja": "fUjY9K2nAIwlALOwSiwc",
+    "fr": "kwhMCf63M8O3rCfnQ3oQ",
+    "es": "86V9x9hrQds83qf7zaGn",
+    "vi": "HAAKLJlaJeGl18MKHYeg",
     # For other languages, default to English voice
-    "zh": "nBoLwpO4PAjQaQwVKPI1",
-    "ja": "nBoLwpO4PAjQaQwVKPI1",
-    "fr": "nBoLwpO4PAjQaQwVKPI1",
-    "es": "nBoLwpO4PAjQaQwVKPI1",
-    "vi": "nBoLwpO4PAjQaQwVKPI1",
     "th": "nBoLwpO4PAjQaQwVKPI1",
 }
 
