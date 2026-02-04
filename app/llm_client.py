@@ -1,51 +1,104 @@
 # llm_client.py
 
-import requests
-from requests.exceptions import ConnectionError, RequestException
+import os
+from openai import OpenAI
+from openai import APIError, APIConnectionError, AuthenticationError, RateLimitError
 
-# LM Studio default port is 1234
-LLAMA_URL = "http://127.0.0.1:1234/v1/chat/completions"
+# OpenAI API configuration
+# Client will be initialized lazily on first use
+_client = None
+
+def _get_client():
+    """Lazy initialization of OpenAI client to ensure API key is set."""
+    global _client
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "❌ OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.\n"
+                "   다음 중 하나의 방법으로 설정하세요:\n"
+                "   1. 터미널에서: export OPENAI_API_KEY='your-api-key'\n"
+                "   2. PowerShell에서: $env:OPENAI_API_KEY='your-api-key'\n"
+                "   3. .env 파일을 사용하거나 시스템 환경 변수로 설정"
+            )
+        _client = OpenAI(api_key=api_key)
+    return _client
+
+# Default model (can be changed if needed)
+DEFAULT_MODEL = "gpt-4.1-mini"
 
 
-def call_llm(prompt: str, temperature=0.7, max_tokens=512) -> str:
+def call_llm(prompt: str, temperature=0.7, max_tokens=512, model: str = None) -> str:
     """
-    Simple helper that wraps ask_local_llm-style payload but accepts a single prompt string.
+    Simple helper that wraps ask_openai_llm-style payload but accepts a single prompt string.
     Used by translation_service and other modules expecting an OpenAI-compatible chat reply.
     """
     messages = [{"role": "user", "content": prompt}]
-    return ask_local_llm(messages, temperature=temperature, max_tokens=max_tokens)
+    return ask_openai_llm(messages, temperature=temperature, max_tokens=max_tokens, model=model)
 
 
-def ask_local_llm(messages, temperature=0.7, max_tokens=512):
-    # LM Studio accepts the model name from the loaded model
-    # You can use the model name or leave it empty - LM Studio will use the currently loaded model
-    payload = {
-        "model": "",  # LM Studio uses the currently loaded model if empty
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-
+def ask_openai_llm(messages, temperature=0.7, max_tokens=512, model: str = None):
+    """
+    Call OpenAI's API for chat completions.
+    Uses the model specified, or defaults to gpt-4.1-mini.
+    """
+    if model is None:
+        model = DEFAULT_MODEL
+    
     try:
-        res = requests.post(LLAMA_URL, json=payload, timeout=60)
-        res.raise_for_status()
-        return res.json()["choices"][0]["message"]["content"]
-    except ConnectionError:
+        client = _get_client()
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        return response.choices[0].message.content
+    
+    except ValueError as e:
+        # Handle missing API key gracefully instead of crashing
+        error_msg = str(e)
+        print(error_msg)
+        return "죄송합니다. OpenAI API 키가 설정되지 않았습니다. 환경 변수 OPENAI_API_KEY를 설정해주세요."
+    
+    except AuthenticationError:
         error_msg = (
-            f"❌ LM Studio 서버에 연결할 수 없습니다.\n"
-            f"   LM Studio가 {LLAMA_URL}에서 실행 중인지 확인하세요.\n"
-            f"   다음을 확인하세요:\n"
-            f"   1. LM Studio가 실행 중인지\n"
-            f"   2. 모델이 로드되어 있는지 (Llama-3.1-8B-Instruct-GGUF)\n"
-            f"   3. 'Local Server' 탭에서 서버가 시작되어 있는지\n"
-            f"   4. 포트가 1234인지 확인 (설정에서 변경 가능)"
+            "❌ OpenAI API 인증 오류가 발생했습니다.\n"
+            "   OPENAI_API_KEY 환경 변수가 유효한지 확인하세요.\n"
+            "   API 키는 OpenAI 대시보드에서 확인할 수 있습니다: https://platform.openai.com/api-keys"
         )
         print(error_msg)
-        # 기본 응답 반환하여 앱이 계속 작동하도록 함
-        return "죄송합니다. LM Studio 서버에 연결할 수 없습니다. LM Studio가 실행 중이고 서버가 시작되어 있는지 확인해주세요."
-    except RequestException as e:
-        error_msg = f"❌ LLM 요청 오류: {e}"
+        return "죄송합니다. OpenAI API 인증 오류가 발생했습니다. API 키를 확인해주세요."
+    
+    except APIConnectionError as e:
+        error_msg = (
+            f"❌ OpenAI API 서버에 연결할 수 없습니다.\n"
+            f"   인터넷 연결을 확인하세요.\n"
+            f"   오류: {e}"
+        )
         print(error_msg)
-        return "죄송합니다. LLM 요청 중 오류가 발생했습니다."
+        return "죄송합니다. OpenAI API 서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요."
+    
+    except RateLimitError:
+        error_msg = (
+            "❌ OpenAI API 요청 한도에 도달했습니다.\n"
+            "   잠시 후 다시 시도해주세요."
+        )
+        print(error_msg)
+        return "죄송합니다. API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요."
+    
+    except APIError as e:
+        error_msg = f"❌ OpenAI API 오류: {e}"
+        print(error_msg)
+        return "죄송합니다. OpenAI API 요청 중 오류가 발생했습니다."
+
+
+# Backward compatibility alias
+def ask_local_llm(messages, temperature=0.7, max_tokens=512):
+    """
+    Backward compatibility wrapper for ask_openai_llm.
+    Previously used for LM Studio, now calls OpenAI API.
+    """
+    return ask_openai_llm(messages, temperature=temperature, max_tokens=max_tokens)
 
 

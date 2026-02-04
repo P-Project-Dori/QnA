@@ -17,59 +17,137 @@ PHRASES = {
     "arrived": {
         "ko": "{spot_name}에 도착했습니다.",
         "en": "We have arrived at {spot_name}.",
+        "zh": "我们已经到达{spot_name}。",
+        "ja": "{spot_name}に到着しました。",
+        "fr": "Nous sommes arrivés à {spot_name}.",
+        "es": "Hemos llegado a {spot_name}.",
+        "vi": "Chúng ta đã đến {spot_name}.",
+        "th": "เรามาถึง{spot_name}แล้ว",
     },
     "tour_start_welcome": {
         "ko": "도리 투어에 오신 것을 환영합니다.",
         "en": "Welcome to the Dori tour.",
+        "zh": "欢迎参加多里导览。",
+        "ja": "ドリツアーへようこそ。",
+        "fr": "Bienvenue à la visite guidée Dori.",
+        "es": "Bienvenido al tour de Dori.",
+        "vi": "Chào mừng đến với tour Dori.",
+        "th": "ยินดีต้อนรับสู่ทัวร์ Dori",
     },
     "tour_start_move": {
         "ko": "그럼 이제 첫 번째 장소로 이동하겠습니다.",
         "en": "Let's move to the first spot.",
+        "zh": "那么现在让我们前往第一个地点。",
+        "ja": "それでは、最初の場所へ移動しましょう。",
+        "fr": "Maintenant, allons au premier lieu.",
+        "es": "Ahora vamos al primer lugar.",
+        "vi": "Bây giờ chúng ta sẽ di chuyển đến địa điểm đầu tiên.",
+        "th": "ตอนนี้เราจะไปยังสถานที่แรกกัน",
     },
     "tour_end": {
         "ko": "모든 투어가 끝났습니다. 함께해주셔서 감사합니다!",
         "en": "The tour is finished. Thank you for joining!",
+        "zh": "所有导览已结束。感谢您的参与！",
+        "ja": "ツアーが終了しました。ご参加ありがとうございました！",
+        "fr": "La visite est terminée. Merci de nous avoir rejoints !",
+        "es": "El tour ha terminado. ¡Gracias por acompañarnos!",
+        "vi": "Tour đã kết thúc. Cảm ơn bạn đã tham gia!",
+        "th": "ทัวร์จบแล้ว ขอบคุณที่เข้าร่วมกับเรา!",
     },
     "qa_intro": {
-        "ko": "설명이 끝났습니다. 질문이 있으신가요? 있으시면 말씀해주세요. 없으시면 ‘패스’라고 말해주셔도 좋아요.",
+        "ko": "설명이 끝났습니다. 질문이 있으신가요? 있으시면 말씀해주세요. 없으시면 '패스'라고 말해주셔도 좋아요.",
         "en": "That concludes the explanation. Do you have any questions? If not, you can say 'pass'.",
+        "zh": "说明已结束。您有什么问题吗？如果有请告诉我。如果没有，您可以说'跳过'。",
+        "ja": "説明が終わりました。ご質問はありますか？ある場合はお知らせください。ない場合は「パス」と言っていただいても結構です。",
+        "fr": "L'explication est terminée. Avez-vous des questions ? Si oui, dites-le moi. Sinon, vous pouvez dire 'passer'.",
+        "es": "Eso concluye la explicación. ¿Tiene alguna pregunta? Si la tiene, dígamelo. Si no, puede decir 'pasar'.",
+        "vi": "Phần giải thích đã kết thúc. Bạn có câu hỏi nào không? Nếu có, hãy cho tôi biết. Nếu không, bạn có thể nói 'bỏ qua'.",
+        "th": "คำอธิบายจบแล้ว คุณมีคำถามไหม? ถ้ามีกรุณาบอกฉัน ถ้าไม่มีคุณสามารถพูดว่า 'ผ่าน' ได้",
     },
     "qa_silence": {
         "ko": "말씀이 없으셔서 다음 장소로 이동하겠습니다.",
         "en": "No response, so we'll move to the next spot.",
+        "zh": "没有回应，我们将前往下一个地点。",
+        "ja": "お返事がないので、次の場所へ移動します。",
+        "fr": "Pas de réponse, nous allons donc passer au lieu suivant.",
+        "es": "Sin respuesta, así que pasaremos al siguiente lugar.",
+        "vi": "Không có phản hồi, nên chúng ta sẽ chuyển sang địa điểm tiếp theo.",
+        "th": "ไม่มีคำตอบ เราจะไปยังสถานที่ถัดไป",
     },
     "qa_pass": {
         "ko": "알겠습니다. 다음 장소로 이동할게요.",
         "en": "Okay. We will move to the next spot.",
+        "zh": "好的。我们将前往下一个地点。",
+        "ja": "承知しました。次の場所へ移動します。",
+        "fr": "D'accord. Nous allons passer au lieu suivant.",
+        "es": "De acuerdo. Pasaremos al siguiente lugar.",
+        "vi": "Được rồi. Chúng ta sẽ chuyển sang địa điểm tiếp theo.",
+        "th": "เข้าใจแล้ว เราจะไปยังสถานที่ถัดไป",
     },
     "qa_more": {
         "ko": "추가로 궁금하신 점 있으신가요?",
         "en": "Any other questions?",
+        "zh": "还有其他问题吗？",
+        "ja": "他にご質問はありますか？",
+        "fr": "D'autres questions ?",
+        "es": "¿Alguna otra pregunta?",
+        "vi": "Bạn còn câu hỏi nào khác không?",
+        "th": "มีคำถามอื่นอีกไหม?",
     },
     "photo_intro": {
         "ko": "이곳은 사진이 아주 잘 나오는 장소예요. 사진을 찍어드리겠습니다!",
         "en": "This is a great photo spot. I'll take your picture!",
+        "zh": "这里是一个绝佳的拍照地点。我来为您拍照！",
+        "ja": "ここは写真がとてもよく撮れる場所です。写真を撮らせていただきます！",
+        "fr": "C'est un excellent endroit pour prendre des photos. Je vais prendre votre photo !",
+        "es": "Este es un gran lugar para fotos. ¡Le tomaré una foto!",
+        "vi": "Đây là một địa điểm chụp ảnh tuyệt vời. Tôi sẽ chụp ảnh cho bạn!",
+        "th": "ที่นี่เป็นจุดถ่ายภาพที่ดีมาก ฉันจะถ่ายรูปให้คุณ!",
     },
     "photo_positioning": {
         "ko": "경회루가 잘 보이는 위치에 서주시면, 제가 적절한 위치로 이동해서 사진을 찍어드리겠습니다! 사진을 찍을 때는 저를 봐주세요!",
         "en": "If you stand in a spot with a good view of Gyeong-hoe-ru Pavilion, I'll move to take your picture so you're in the right spot! Please look at me when I take your picture!",
+        "zh": "如果您站在能看到庆会楼的位置，我会移动到合适的位置为您拍照！拍照时请看着我！",
+        "ja": "慶会楼がよく見える場所に立っていただければ、私が適切な位置に移動して写真を撮らせていただきます！写真を撮る時は私を見てください！",
+        "fr": "Si vous vous placez à un endroit avec une bonne vue sur le pavillon Gyeong-hoe-ru, je me déplacerai pour prendre votre photo afin que vous soyez au bon endroit ! Regardez-moi quand je prends votre photo !",
+        "es": "Si se coloca en un lugar con buena vista del pabellón Gyeong-hoe-ru, me moveré para tomar su foto para que esté en el lugar correcto. ¡Por favor, míreme cuando tome su foto!",
+        "vi": "Nếu bạn đứng ở vị trí có thể nhìn thấy Gyeong-hoe-ru Pavilion rõ ràng, tôi sẽ di chuyển đến vị trí phù hợp để chụp ảnh cho bạn! Khi chụp ảnh, hãy nhìn vào tôi!",
+        "th": "หากคุณยืนในตำแหน่งที่มองเห็นเกียงเฮรูได้ดี ฉันจะเคลื่อนที่ไปถ่ายรูปให้คุณในตำแหน่งที่เหมาะสม! กรุณามองมาที่ฉันเมื่อฉันถ่ายรูป!",
     },
     "photo_countdown": {
         "ko": "5초 뒤에 사진을 찍겠습니다! 웃어주세요~",
         "en": "I'll take your picture in five seconds! Smile~",
+        "zh": "五秒后我将为您拍照！请微笑~",
+        "ja": "5秒後に写真を撮ります！笑顔で~",
+        "fr": "Je vais prendre votre photo dans cinq secondes ! Souriez~",
+        "es": "¡Le tomaré una foto en cinco segundos! Sonría~",
+        "vi": "Tôi sẽ chụp ảnh trong năm giây nữa! Hãy cười lên~",
+        "th": "ฉันจะถ่ายรูปในอีก 5 วินาที! ยิ้มหน่อย~",
     },
     "photo_shot": {
         "ko": "찰칵!",
         "en": "Click!",
+        "zh": "咔嚓！",
+        "ja": "カシャ！",
+        "fr": "Clac !",
+        "es": "¡Click!",
+        "vi": "Cạch!",
+        "th": "แชะ!",
     },
     "photo_saved": {
         "ko": "사진이 저장되었습니다! 나중에 받아가실 수 있어요.",
         "en": "Photo saved! You can get it later.",
+        "zh": "照片已保存！您稍后可以获取。",
+        "ja": "写真が保存されました！後で受け取ることができます。",
+        "fr": "Photo enregistrée ! Vous pourrez la récupérer plus tard.",
+        "es": "¡Foto guardada! Puede obtenerla más tarde.",
+        "vi": "Ảnh đã được lưu! Bạn có thể lấy sau.",
+        "th": "บันทึกรูปภาพแล้ว! คุณสามารถรับได้ภายหลัง",
     },
 }
 
 
-# 간단한 spot 설명 스크립트 (하드코딩, ko/en만)
+# 간단한 spot 설명 스크립트 (하드코딩, 다국어 지원)
 SPOT_SCRIPTS = {
     "ko": {
         "gwanghwamun": [
@@ -115,6 +193,144 @@ SPOT_SCRIPTS = {
         ],
         "gyeonghoeru": [
             "Gyeong-hoe-ru is a pavilion built over a pond, used for banquets and receptions of foreign envoys.",
+        ],
+    },
+    "zh": {
+        "gwanghwamun": [
+            "光化门是景福宫的正门，象征着朝鲜王朝的威严。",
+            "经过壬辰倭乱和韩国战争，多次遭到破坏和修复。",
+        ],
+        "heungnyemun": [
+            "兴礼门是经过光化门进入景福宫的第二道门。",
+            "它与王室仪式进行时大臣们等待的空间相连。",
+        ],
+        "geunjeongmun": [
+            "勤政门是通往勤政殿前院的门，是正式朝会的入口。",
+        ],
+        "geunjeongjeon": [
+            "勤政殿是国王处理政务的正殿，是景福宫的中心建筑。",
+            "即位仪式和接见外国使节等国家典礼在这里举行。",
+        ],
+        "sujeongjeon": [
+            "修政殿是国王和大臣们讨论学问和政治的场所。",
+        ],
+        "gyeonghoeru": [
+            "庆会楼是建在池塘上的楼阁，用于宴会和接待外国使节。",
+        ],
+    },
+    "ja": {
+        "gwanghwamun": [
+            "光化門は景福宮の正門で、朝鮮王朝の威厳を象徴しています。",
+            "壬辰倭乱と朝鮮戦争を経て、何度も破壊と復元を繰り返しました。",
+        ],
+        "heungnyemun": [
+            "興礼門は光化門を過ぎて景福宮に入る二番目の門です。",
+            "王室儀式が行われる際、臣下たちが待機していた空間と接しています。",
+        ],
+        "geunjeongmun": [
+            "勤政門は勤政殿の前庭に入る門で、公式朝会の入口でした。",
+        ],
+        "geunjeongjeon": [
+            "勤政殿は国王が政務を見た正殿で、景福宮の中心建物です。",
+            "ここで即位式や外国使節の接見などの国家儀式が行われました。",
+        ],
+        "sujeongjeon": [
+            "修政殿は王と臣下が学問と政治について議論した場所でした。",
+        ],
+        "gyeonghoeru": [
+            "慶会楼は池の上に建てられた楼閣で、宴会や外国使節の接待に使用されました。",
+        ],
+    },
+    "fr": {
+        "gwanghwamun": [
+            "Gwang-hwa-mun est la porte principale du palais Gyeong-bok-gung, symbolisant l'autorité de la dynastie Joseon.",
+            "Elle a été endommagée et restaurée plusieurs fois pendant la guerre d'Imjin et la guerre de Corée.",
+        ],
+        "heungnyemun": [
+            "Heung-nye-mun est la deuxième porte après Gwang-hwa-mun en entrant dans Gyeong-bok-gung.",
+            "Elle est reliée aux espaces où les fonctionnaires attendaient pendant les cérémonies royales.",
+        ],
+        "geunjeongmun": [
+            "Geun-jeong-mun est la porte menant à la cour principale de Geun-jeong-jeon, utilisée pour les audiences officielles.",
+        ],
+        "geunjeongjeon": [
+            "Geun-jeong-jeon est la salle du trône principale où le roi gérait les affaires de l'État.",
+            "Les couronnements et les réceptions d'envoyés étrangers se déroulaient ici.",
+        ],
+        "sujeongjeon": [
+            "Su-jeong-jeon était une salle où le roi et les fonctionnaires discutaient d'études et de politique.",
+        ],
+        "gyeonghoeru": [
+            "Gyeong-hoe-ru est un pavillon construit sur un étang, utilisé pour les banquets et les réceptions d'envoyés étrangers.",
+        ],
+    },
+    "es": {
+        "gwanghwamun": [
+            "Gwang-hwa-mun es la puerta principal del palacio Gyeong-bok-gung, que simboliza la autoridad de la dinastía Joseon.",
+            "Fue dañada y restaurada múltiples veces durante la guerra de Imjin y la guerra de Corea.",
+        ],
+        "heungnyemun": [
+            "Heung-nye-mun es la segunda puerta después de Gwang-hwa-mun al entrar en Gyeong-bok-gung.",
+            "Se conecta con los espacios donde los funcionarios esperaban durante las ceremonias reales.",
+        ],
+        "geunjeongmun": [
+            "Geun-jeong-mun es la puerta que conduce al patio principal de Geun-jeong-jeon, utilizada para audiencias oficiales.",
+        ],
+        "geunjeongjeon": [
+            "Geun-jeong-jeon es el salón del trono principal donde el rey manejaba los asuntos del estado.",
+            "Las coronaciones y las recepciones de enviados extranjeros tuvieron lugar aquí.",
+        ],
+        "sujeongjeon": [
+            "Su-jeong-jeon era un salón donde el rey y los funcionarios discutían estudios y política.",
+        ],
+        "gyeonghoeru": [
+            "Gyeong-hoe-ru es un pabellón construido sobre un estanque, utilizado para banquetes y recepciones de enviados extranjeros.",
+        ],
+    },
+    "vi": {
+        "gwanghwamun": [
+            "Gwang-hwa-mun là cổng chính của cung điện Gyeong-bok-gung, tượng trưng cho quyền uy của triều đại Joseon.",
+            "Nó đã bị hư hại và được phục hồi nhiều lần qua cuộc chiến Imjin và Chiến tranh Triều Tiên.",
+        ],
+        "heungnyemun": [
+            "Heung-nye-mun là cổng thứ hai sau Gwang-hwa-mun khi vào Gyeong-bok-gung.",
+            "Nó kết nối với các không gian nơi các quan chức chờ đợi trong các nghi lễ hoàng gia.",
+        ],
+        "geunjeongmun": [
+            "Geun-jeong-mun là cổng dẫn đến sân chính của Geun-jeong-jeon, được sử dụng cho các buổi yết kiến chính thức.",
+        ],
+        "geunjeongjeon": [
+            "Geun-jeong-jeon là điện chính nơi nhà vua xử lý các vấn đề quốc gia.",
+            "Lễ đăng quang và tiếp đón sứ giả nước ngoài diễn ra tại đây.",
+        ],
+        "sujeongjeon": [
+            "Su-jeong-jeon là một điện nơi nhà vua và các quan chức thảo luận về học vấn và chính trị.",
+        ],
+        "gyeonghoeru": [
+            "Gyeong-hoe-ru là một lầu được xây dựng trên ao, được sử dụng cho các bữa tiệc và tiếp đón sứ giả nước ngoài.",
+        ],
+    },
+    "th": {
+        "gwanghwamun": [
+            "ควังฮวามุนเป็นประตูหลักของพระราชวังคยองบกกุง สัญลักษณ์แห่งอำนาจของราชวงศ์โชซอน",
+            "มันถูกทำลายและบูรณะหลายครั้งผ่านสงครามอิมจินและสงครามเกาหลี",
+        ],
+        "heungnyemun": [
+            "ฮึงเยมุนเป็นประตูที่สองหลังจากควังฮวามุนเมื่อเข้าสู่คยองบกกุง",
+            "มันเชื่อมต่อกับพื้นที่ที่ขุนนางรอคอยระหว่างพิธีกรรมของราชวงศ์",
+        ],
+        "geunjeongmun": [
+            "คึนจองมุนเป็นประตูที่นำไปสู่ลานหน้าของคึนจองจอน ใช้สำหรับการเข้าเฝ้าอย่างเป็นทางการ",
+        ],
+        "geunjeongjeon": [
+            "คึนจองจอนเป็นท้องพระโรงหลักที่กษัตริย์จัดการกิจการของรัฐ",
+            "พิธีราชาภิเษกและการต้อนรับทูตต่างประเทศเกิดขึ้นที่นี่",
+        ],
+        "sujeongjeon": [
+            "ซูจองจอนเป็นห้องที่กษัตริย์และขุนนางหารือเกี่ยวกับการศึกษาและการเมือง",
+        ],
+        "gyeonghoeru": [
+            "คยองเฮรูเป็นศาลาที่สร้างเหนือสระน้ำ ใช้สำหรับงานเลี้ยงและการต้อนรับทูตต่างประเทศ",
         ],
     },
 }
@@ -209,6 +425,20 @@ def run_qa_session(spot_code, lang):
     if spot_code == "geunjeongjeon":
         if lang == "ko":
             intro_text = "Geunjeongmun과 Geunjeongjeon에 대한 설명이 끝났습니다. 질문이 있으신가요? 있으시면 말씀해주세요. 없으시면 '패스'라고 말해주셔도 좋아요."
+        elif lang == "en":
+            intro_text = "That concludes the explanation of Geun-jeong-mun and Geun-jeong-jeon. Do you have any questions? If not, you can say 'pass'."
+        elif lang == "zh":
+            intro_text = "关于勤政门和勤政殿的说明已结束。您有什么问题吗？如果有请告诉我。如果没有，您可以说'跳过'。"
+        elif lang == "ja":
+            intro_text = "勤政門と勤政殿の説明が終わりました。ご質問はありますか？ある場合はお知らせください。ない場合は「パス」と言っていただいても結構です。"
+        elif lang == "fr":
+            intro_text = "L'explication de Geun-jeong-mun et Geun-jeong-jeon est terminée. Avez-vous des questions ? Si oui, dites-le moi. Sinon, vous pouvez dire 'passer'."
+        elif lang == "es":
+            intro_text = "Eso concluye la explicación de Geun-jeong-mun y Geun-jeong-jeon. ¿Tiene alguna pregunta? Si la tiene, dígamelo. Si no, puede decir 'pasar'."
+        elif lang == "vi":
+            intro_text = "Phần giải thích về Geun-jeong-mun và Geun-jeong-jeon đã kết thúc. Bạn có câu hỏi nào không? Nếu có, hãy cho tôi biết. Nếu không, bạn có thể nói 'bỏ qua'."
+        elif lang == "th":
+            intro_text = "คำอธิบายเกี่ยวกับคึนจองมุนและคึนจองจอนจบแล้ว คุณมีคำถามไหม? ถ้ามีกรุณาบอกฉัน ถ้าไม่มีคุณสามารถพูดว่า 'ผ่าน' ได้"
         else:
             intro_text = "That concludes the explanation of Geun-jeong-mun and Geun-jeong-jeon. Do you have any questions? If not, you can say 'pass'."
         speak(intro_text, lang)
@@ -228,7 +458,24 @@ def run_qa_session(spot_code, lang):
 
         # --- '패스' 계열 발화 처리 ---
         # Use word boundaries to avoid matching "no" in "know" or "not"
-        PASS_WORDS = ["패스", "없어", "괜찮아", "pass", "no", "없습니다", "아니오", "skip", "next"]
+        PASS_WORDS = [
+            # Korean
+            "패스", "없어", "괜찮아", "없습니다", "아니오",
+            # English
+            "pass", "no", "skip", "next", "none",
+            # Chinese
+            "跳过", "没有", "不用", "不需要", "不",
+            # Japanese
+            "パス", "ない", "いいえ", "スキップ", "なし",
+            # French
+            "passer", "non", "rien", "suivant", "aucun",
+            # Spanish
+            "pasar", "no", "nada", "siguiente", "ninguno",
+            # Vietnamese
+            "bỏ qua", "không", "không có", "tiếp theo", "không cần",
+            # Thai
+            "ผ่าน", "ไม่มี", "ไม่", "ข้าม", "ไม่ต้อง",
+        ]
         # Check for whole words only (word boundaries)
         words_in_text = set(re.findall(r'\b\w+\b', normalized))
         pass_words_set = set(p.lower() for p in PASS_WORDS)

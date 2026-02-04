@@ -42,6 +42,7 @@ def build_rag_context(question: str, spot_code=None):
     # RAG TOGGLE CHECK: If RAG is disabled, return empty context
     # ========================================================================
     if not ENABLE_RAG:
+        print("ℹ️  [RAG] RAG is disabled (ENABLE_RAG = False)")
         return ""
     
     # ========================================================================
@@ -50,12 +51,15 @@ def build_rag_context(question: str, spot_code=None):
     try:
         # FAISS 검색으로 knowledge_doc IDs 얻기
         doc_ids = retriever.search(question)
+        print(f"🔍 [RAG] Retrieved {len(doc_ids)} document IDs: {doc_ids}")
         
         # DB에서 실제 문서 가져오기
         if not doc_ids:
+            print("⚠️  [RAG] No documents found for query")
             return ""
         
         docs = get_knowledge_docs_by_ids(doc_ids)
+        print(f"🔍 [RAG] Retrieved {len(docs)} documents from database")
 
         # spot_code 필터링이 필요한 경우
         # spot_id로 필터링하려면 spots 테이블과 조인 필요
@@ -69,6 +73,7 @@ def build_rag_context(question: str, spot_code=None):
                 texts.append(d["text"])
         
         context_blob = "\n\n".join(texts)
+        print(f"📝 [RAG] Context length: {len(context_blob)} characters")
         return context_blob
     
     except Exception as e:
@@ -125,6 +130,37 @@ def _truncate_to_two_sentences(text: str) -> str:
     return text.strip()
 
 
+def _is_potentially_unclear(question: str) -> bool:
+    """
+    Detect if a question might be unclear or mis-transcribed.
+    This helps the LLM handle ASR errors better.
+    """
+    if not question or len(question.strip()) < 3:
+        return True
+    
+    # Check for common ASR error patterns
+    import re
+    
+    # Very short questions might be incomplete
+    words = question.split()
+    if len(words) < 2:
+        return True
+    
+    # Check for excessive non-alphanumeric characters
+    non_alnum_ratio = len(re.sub(r'[a-zA-Z0-9가-힣\s]', '', question)) / max(len(question), 1)
+    if non_alnum_ratio > 0.3:
+        return True
+    
+    # Check for words that look like gibberish (very long words, repeated patterns)
+    for word in words:
+        if len(word) > 20:  # Unusually long word
+            return True
+        if re.search(r'(.)\1{4,}', word):  # Excessive character repetition
+            return True
+    
+    return False
+
+
 def build_llm_prompt_for_qa(
     spot_code: str,
     user_question: str,
@@ -147,7 +183,10 @@ def build_llm_prompt_for_qa(
     Note:
         - ENABLE_RAG가 True이면 RAG 컨텍스트를 포함한 프롬프트 생성
         - ENABLE_RAG가 False이면 컨텍스트 없이 일반 프롬프트 생성
+        - Unclear transcriptions are automatically detected and handled
     """
+    # Check if question might be unclear
+    is_unclear = _is_potentially_unclear(user_question)
     # ========================================================================
     # RAG CONTEXT RETRIEVAL
     # ========================================================================
@@ -159,16 +198,29 @@ def build_llm_prompt_for_qa(
     # PROMPT GENERATION: RAG Mode (with context)
     # ========================================================================
     if context:
+        print(f"✅ [RAG] Using RAG mode with context ({len(context)} chars)")
         # RAG is enabled and context was successfully retrieved
+        unclear_instruction = ""
+        if is_unclear:
+            unclear_instruction = (
+                "\nIMPORTANT: The user's question may be unclear or mis-transcribed due to speech recognition errors.\n"
+                "- If the question doesn't make sense, try to interpret it in the context of Gyeongbokgung Palace.\n"
+                "- If you cannot understand the question at all, say: 'I didn't catch that. Could you please repeat your question?'\n"
+                "- Otherwise, answer based on what you think the user might be asking about.\n"
+            )
+        
         prompt = (
             "You are Dori, a multilingual tour guide robot.\n"
-            "Use ONLY the given context to answer the user's question.\n"
+            "PREFER the given context to answer the user's question, but if the answer is not in the context, use your general knowledge to answer.\n"
             "CRITICAL RULES:\n"
             "- Answer in exactly 2 sentences or less\n"
             "- Include ONLY the most essential information\n"
             "- Stop immediately after answering - do not add any additional sentences\n"
-            "- If the answer is not in the context, say only: 'I don't have that information.'\n"
-            "- Answer in English\n\n"
+            "- First try to answer using the provided context\n"
+            "- If the answer is not in the context, use your general knowledge to provide an answer\n"
+            "- Answer in English"
+            + unclear_instruction +
+            "\n\n"
             f"[Context]\n{context}\n\n"
             f"[Question]\n{user_question}\n\n"
             "[Answer in English (2 sentences max, essential info only)]:"
@@ -179,6 +231,16 @@ def build_llm_prompt_for_qa(
     else:
         # Either RAG is disabled (ENABLE_RAG = False) or no context was found
         # In this mode, LLM relies on its general knowledge
+        print(f"ℹ️  [RAG] Using non-RAG mode (no context)")
+        unclear_instruction = ""
+        if is_unclear:
+            unclear_instruction = (
+                "\nIMPORTANT: The user's question may be unclear or mis-transcribed due to speech recognition errors.\n"
+                "- If the question doesn't make sense, try to interpret it in the context of Gyeongbokgung Palace.\n"
+                "- If you cannot understand the question at all, say: 'I didn't catch that. Could you please repeat your question?'\n"
+                "- Otherwise, answer based on what you think the user might be asking about.\n"
+            )
+        
         prompt = (
             "You are Dori, a multilingual tour guide robot.\n"
             "CRITICAL RULES:\n"
@@ -186,7 +248,9 @@ def build_llm_prompt_for_qa(
             "- Include ONLY the most essential information\n"
             "- Stop immediately after answering - do not add any additional sentences\n"
             "- If you don't know, say only: 'I don't have that information.'\n"
-            "- Answer in English\n\n"
+            "- Answer in English"
+            + unclear_instruction +
+            "\n\n"
             f"[Question]\n{user_question}\n\n"
             "[Answer in English (2 sentences max, essential info only)]:"
         )
